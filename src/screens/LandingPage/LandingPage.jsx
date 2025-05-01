@@ -19,12 +19,12 @@ export const LandingPage = () => {
     { id: "book", label: "book" },
   ];
 
-  // Table data
-  const tableData = [
-    { id: 1, title: "hogehoge" },
-    { id: 2, title: "hogehoge" },
-    { id: 3, title: "hogehoge" },
-  ];
+  // Table data (状態として管理)
+  const [tableData, setTableData] = useState([
+    { id: 1, title: "hogehoge", author: "John Doe", year: "2021" },
+    { id: 2, title: "fugafuga", author: "Jane Smith", year: "2020" },
+    { id: 3, title: "hogefuga", author: "Alice Johnson", year: "2019" },
+  ]);
 
   // Table columns
   const columns = [
@@ -59,6 +59,13 @@ export const LandingPage = () => {
     handleDrop,
   } = useLandingPageState(columns);
 
+  // 編集内容を反映する関数
+  const handleUpdateRow = (updatedRow) => {
+    setTableData((prevData) =>
+      prevData.map((row) => (row.id === updatedRow.id ? updatedRow : row))
+    );
+  };
+
   return (
     <div className="bg-white flex flex-row justify-center w-full"
          onDragOver={handleDragOver} // 画面全体でドラッグを検知
@@ -82,7 +89,11 @@ export const LandingPage = () => {
 
           {/* Main content area */}
           <ScrollArea className="flex-1 px-8 py-4">
-          <TableSection visibleColumns={visibleColumns} tableData={tableData} />
+            <TableSection
+              visibleColumns={visibleColumns}
+              tableData={tableData}
+              onUpdateRow={handleUpdateRow} // 編集内容を反映する関数を渡す
+            />
 
             <ScrollBar
               orientation="vertical"

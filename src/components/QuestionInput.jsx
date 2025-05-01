@@ -4,7 +4,7 @@ import { Input } from "../components/ui/input";
 
 export const QuestionInput = () => {
   return (
-    <div className="absolute bottom-[50px] left-1/2 transform -translate-x-1/2 w-[999px]">
+    <div className="absolute bottom-[5px] left-1/2 transform -translate-x-1/2 w-[999px]">
       <Card className="bg-[#f7f7f7] rounded-[20px]">
             <CardContent className="p-0">
                 <Input
