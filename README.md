@@ -10,7 +10,7 @@
 npm install
 ```
 
-## Step2: 開発サーバーの起動
+### Step2: 開発サーバーの起動
 ```bash
 npm run dev
 ```
