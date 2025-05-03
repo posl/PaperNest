@@ -3,7 +3,10 @@ import { useState } from "react";
 export const useLandingPageState = (columns) => {
   // サイドバーの開閉状態
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  // const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
+  };
 
   // メニューの開閉状態
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,7 +16,9 @@ export const useLandingPageState = (columns) => {
   const [isDragging, setIsDragging] = useState(false); // ドラッグ中かどうかの状態
 
   // 選択された列の状態
-  const [selectedColumns, setSelectedColumns] = useState([]);
+  const [selectedColumns, setSelectedColumns] = useState(
+    columns.map((col) => col.id) // 初期状態はすべて選択
+  );
 
   // ドラッグイベントのハンドラー
   const handleDragOver = (e) => {
@@ -38,19 +43,28 @@ export const useLandingPageState = (columns) => {
   };
 
   // チェックボックスの変更ハンドラー
-  const handleCheckboxChange = (id) => {
-    setSelectedColumns((prev) =>
-        prev.includes(id)
-            ? prev.filter((column) => column !== id)
+  // const handleCheckboxChange = (id) => {
+  //   setSelectedColumns((prev) =>
+  //       prev.includes(id)
+  //           ? prev.filter((column) => column !== id)
+  //           : [...prev, id]
+  //       );
+  //   }
+
+      const handleCheckboxChange = (id) => {
+        setSelectedColumns((prev) =>
+          prev.includes(id)
+             ? prev.filter((column) => column !== id)
             : [...prev, id]
-        );
-    }
+         );
+      }
 
     // 表示する列の状態
     const [visibleColumns, setVisibleColumns] = useState(columns); // 初期は全表示
 
     // フィルターを適用する関数
     const handleApplyFilters = () => {
+    console.log("適用されたフィルター:", selectedColumns);
     const newVisibleColumns = columns.filter(col => selectedColumns.includes(col.id));
     setVisibleColumns(newVisibleColumns);
     };  

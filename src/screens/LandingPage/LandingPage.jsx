@@ -83,6 +83,7 @@ export const LandingPage = () => {
             isSidebarOpen={isSidebarOpen}
             toggleSidebar={toggleSidebar}
             filterOptions={filterOptions}
+            selectedColumns={selectedColumns} // 選択されたカラムを渡す
             handleCheckboxChange={handleCheckboxChange}
             handleApplyFilters={handleApplyFilters}
           />

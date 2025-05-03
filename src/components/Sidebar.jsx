@@ -6,6 +6,7 @@ export const Sidebar = ({
   isSidebarOpen,
   toggleSidebar,
   filterOptions,
+  selectedColumns,
   handleCheckboxChange,
   handleApplyFilters,
 }) => {
@@ -42,6 +43,7 @@ export const Sidebar = ({
           <Checkbox
             id={option.id}
             className="w-5 h-5 rounded-[3px] border-black"
+            checked={selectedColumns.includes(option.id)}  // Check if the option is selected
             onCheckedChange={() => handleCheckboxChange(option.id)}
           />
           <label
