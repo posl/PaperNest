@@ -26,7 +26,7 @@ export const Sidebar = ({
   }
 
   return (
-    <aside className="w-[230px] border-r border-gray-200 px-4 py-2 relative">
+    <aside className="w-[300px] h-[100vh] border-r border-gray-200 px-4 py-2 relative bg-gray-100">
       <button
         onClick={toggleSidebar}
         className="absolute top-2 right-2 flex justify-center items-center w-7 h-[35px]"
@@ -43,7 +43,7 @@ export const Sidebar = ({
           <Checkbox
             id={option.id}
             className="w-5 h-5 rounded-[3px] border-black"
-            checked={selectedColumns.includes(option.id)}  // Check if the option is selected
+            checked={selectedColumns.includes(option.id)}
             onCheckedChange={() => handleCheckboxChange(option.id)}
           />
           <label

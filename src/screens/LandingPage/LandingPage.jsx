@@ -72,24 +72,31 @@ export const LandingPage = () => {
          onDragLeave={handleDragLeave} // ドラッグが終了したらリセット
          onDrop={handleDrop} // ドロップイベントを処理
     >
-      <div className="bg-white overflow-hidden w-full max-w-[1512px] relative min-h-[982px]">
+      <div className="bg-white overflow-hidden w-full h-screen relative">
         {/* Header */}
         <Header isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
         
         {/* Main content */}
-        <div className="flex mt-[20px]">
-          {/* Left sidebar */}
+      <div className="flex mt-[0px] w-full h-full">
+        {/* Left sidebar */}
+        <div className={`relative ${isSidebarOpen ? "w-[300px]" : "w-[50px]"}`}>
           <Sidebar
             isSidebarOpen={isSidebarOpen}
             toggleSidebar={toggleSidebar}
             filterOptions={filterOptions}
-            selectedColumns={selectedColumns} // 選択されたカラムを渡す
+            selectedColumns={selectedColumns}
             handleCheckboxChange={handleCheckboxChange}
             handleApplyFilters={handleApplyFilters}
           />
+          
+        </div>
 
-          {/* Main content area */}
-          <ScrollArea className="flex-1 px-8 py-4">
+        {/* Main content area */}
+        <ScrollArea
+          className={`flex-1 min-w-0 transition-all duration-300 ${
+            isSidebarOpen ? "ml-0" : "w-full"
+          }`}
+        >
             <TableSection
               visibleColumns={visibleColumns}
               tableData={tableData}
