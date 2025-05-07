@@ -18,6 +18,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_groq import ChatGroq
+from models import UploadPDFResponseSchema
 from pypdf import PdfReader
 
 app = FastAPI()  # インスタンス作成
@@ -117,37 +118,53 @@ async def upload_pdf(
     file: UploadFile = File(...),  # pdf本体
     category: str = Form(None),  # 論文のカテゴリ
 ):
-    "処理1: アップロードしたPDFをメモリに保存し、URLを作成"
-    if not file.filename.endswith(".pdf"):
-        raise HTTPException(
-            status_code=400, detail="Only PDF files are allowed."
-        )  # PDFのみ許可
-    pdf_content = await file.read()  # PDFを読み込む
-    pdf_id = str(uuid.uuid4())  # PDfのIDを発行
-    memory_storage[pdf_id] = pdf_content  # PDFをメモリに保存
-    pdf_url = f"{BASE_URL}/pdf/{pdf_id}.pdf"  # PDFファイルのURLを生成
+    try:
+        "処理1: アップロードしたPDFをメモリに保存し、URLを作成"
+        if not file.filename.endswith(".pdf"):
+            raise HTTPException(
+                status_code=400, detail="Only PDF files are allowed."
+            )  # PDFのみ許可
+        pdf_content = await file.read()  # PDFを読み込む
+        pdf_id = str(uuid.uuid4())  # PDfのIDを発行
+        memory_storage[pdf_id] = pdf_content  # PDFをメモリに保存
+        pdf_url = f"{BASE_URL}/pdf/{pdf_id}.pdf"  # PDFファイルのURLを生成
 
-    file.file.seek(0)  # ポインタを先頭に戻す
+        file.file.seek(0)  # ポインタを先頭に戻す
 
-    "処理2: RAGを使用し，論文のタイトルと要約を生成"
-    copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
-    with open(copy_pdf_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)  # RAGのために，PDFを一時的に保存
+        "処理2: RAGを使用し，論文のタイトルと要約を生成"
+        copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
+        with open(copy_pdf_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)  # RAGのために，PDFを一時的に保存
 
-    pdf_text = read_text_from_pdf(str(copy_pdf_path))
-    splited_txt = split_pdf_text(pdf_text)
-    index = embedding_text(splited_txt)
-    retriever = get_retriever(index)
-    rag_chain = create_rag_chain(retriever, groq_chat, prompt)
-    title = generate_title(rag_chain)
-    summary = generate_summary(rag_chain)
+        pdf_text = read_text_from_pdf(str(copy_pdf_path))
+        splited_txt = split_pdf_text(pdf_text)
+        index = embedding_text(splited_txt)
+        retriever = get_retriever(index)
+        rag_chain = create_rag_chain(retriever, groq_chat, prompt)
+        title = generate_title(rag_chain)
+        summary = generate_summary(rag_chain)
 
-    title = title.replace("Title: ", "")
-    summary = summary.replace("Summary: ", "")
+        title = title.replace("Title: ", "")
+        summary = summary.replace("Summary: ", "")
 
-    os.remove(copy_pdf_path)  # 一時的に保存したPDFを削除
+        os.remove(copy_pdf_path)  # 一時的に保存したPDFを削除
 
-    return {"pdf_url": pdf_url, "title": title, "summary": summary}
+        # To 植中君: 連携するなら，この辺？
+
+        # 処理3: レスポンスを返す
+        # return {"pdf_url": pdf_url, "title": title, "summary": summary}
+        return UploadPDFResponseSchema(
+            success=True,
+            message="PDF uploaded successfully.",
+            pdf_url=pdf_url,
+        )
+
+    except Exception as e:
+        return UploadPDFResponseSchema(
+            success=False,
+            message=f"An error occurred: {str(e)}",
+            pdf_url=None,
+        )
 
 
 # PDFを開く
