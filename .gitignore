@@ -38,3 +38,6 @@ wheels/
 
 # development
 notebooks/
+
+# database
+papers.db
