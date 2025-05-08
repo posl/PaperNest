@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ScrollArea, ScrollBar } from "../../components/ui/scroll-area";
 import { Header } from "../../components/Header"
 import { Sidebar } from "../../components/Sidebar";
@@ -6,7 +6,7 @@ import { TableSection } from "../../components/Table";
 import { QuestionInput } from "../../components/QuestionInput";
 import { FloatingUploadButton } from "../../components/FloatingUploadButton";
 import { useLandingPageState } from "../LandingPage/hooks/useLandingPageState";
-import { useState } from "react";
+
 
 export const LandingPage = () => {
   // Filter options data
@@ -19,12 +19,39 @@ export const LandingPage = () => {
     { id: "book", label: "book" },
   ];
 
-  // Table data (状態として管理)
-  const [tableData, setTableData] = useState([
-    { id: 1, title: "hogehoge", author: "John Doe", year: "2021" },
-    { id: 2, title: "fugafuga", author: "Jane Smith", year: "2020" },
-    { id: 3, title: "hogefuga", author: "Alice Johnson", year: "2019" },
-  ]);
+    // Tabs state
+    const [tabs, setTabs] = useState([
+      { id: 1, name: "研究テーマ1" },
+      { id: 2, name: "研究テーマ2" },
+      { id: 3, name: "研究テーマ3" },
+    ]);
+    const [selectedTabId, setSelectedTabId] = useState(1);
+    const handleAddTab = () => {
+      const nextId = tabs.length + 1;
+      const newTab = { id: nextId, name: `研究テーマ${nextId}` };
+      setTabs([...tabs, newTab]);
+      setSelectedTabId(nextId);
+    };
+
+      // Flat list of all papers with theme field
+  const allPapers = [
+    { id: 1, title: "example1", author: "John Doe", year: "2021", theme: 1 },
+    { id: 2, title: "example2", author: "Jane Smith", year: "2020", theme: 1 },
+    { id: 3, title: "example3", author: "Author A", year: "2022", theme: 2 },
+    { id: 4, title: "example4", author: "Author B", year: "2023", theme: 2 },
+    { id: 5, title: "example5", author: "Writer X", year: "2018", theme: 3 },
+    { id: 6, title: "example6", author: "Writer Y", year: "2057", theme: 3 },
+  ];
+
+  const [tableData, setTableData] = useState(
+    allPapers.filter((paper) => paper.theme === selectedTabId)
+  );
+
+
+  useEffect(() => {
+    setTableData(allPapers.filter((paper) => paper.theme === selectedTabId));
+  }, [selectedTabId]);
+
 
   // Table columns
   const columns = [
@@ -74,7 +101,14 @@ export const LandingPage = () => {
     >
       <div className="bg-white overflow-hidden w-full h-screen relative">
         {/* Header */}
-        <Header isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+        <Header
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          tabs={tabs}
+          selectedTabId={selectedTabId}
+          setSelectedTabId={setSelectedTabId}
+          handleAddTab={handleAddTab}
+        />
         
         {/* Main content */}
       <div className="flex mt-[0px] w-full h-full">

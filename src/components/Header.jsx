@@ -4,7 +4,7 @@ import { Avatar } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { PlusIcon } from "lucide-react";
 
-export const Header = ({ isMenuOpen, setIsMenuOpen }) => {
+export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, selectedTabId, setSelectedTabId, handleAddTab }) => {
     return (
         <header className="w-full h-[118px] bg-[#b9e3ff3d] flex px-[40px]">
           <div className="flex items-center p-0">
@@ -25,25 +25,22 @@ export const Header = ({ isMenuOpen, setIsMenuOpen }) => {
           </div>
 
           <div className="flex items-center px-20 gap-[var(--variable-collection-spacing-m)]">
+          {tabs.map((tab) => (
+              <Button
+                key={tab.id}
+                variant="ghost"
+                className={`font-body-text text-black text-[length:var(--body-text-font-size)] ${
+                selectedTabId === tab.id ? "bg-gray-200" : ""
+                }`}
+                onClick={() => setSelectedTabId(tab.id)}
+              >
+              {tab.name}
+              </Button>
+            ))}
             <Button
-              variant="ghost"
-              className="font-body-text text-black text-[length:var(--body-text-font-size)]"
+              className="bg-[#dddddd] rounded-lg shadow-button-shadow p-3.5"
+              onClick={handleAddTab}
             >
-              研究テーマ1
-            </Button>
-            <Button
-              variant="ghost"
-              className="font-body-text text-black text-[length:var(--body-text-font-size)]"
-            >
-              研究テーマ2
-            </Button>
-            <Button
-              variant="ghost"
-              className="font-body-text text-black text-[length:var(--body-text-font-size)]"
-            >
-              研究テーマ3
-            </Button>
-            <Button className="bg-[#dddddd] rounded-lg shadow-button-shadow p-3.5">
               <PlusIcon className="w-6 h-6 text-white" />
             </Button>
           </div>
