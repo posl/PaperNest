@@ -1,5 +1,4 @@
 import os
-import shutil
 import uuid
 from io import BytesIO
 from pathlib import Path
@@ -18,12 +17,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_groq import ChatGroq
-from models import UploadPDFResponseSchema
 from pypdf import PdfReader
 
 app = FastAPI()  # インスタンス作成
 TOP_DIR = Path(__file__).resolve().parent
 UPLOAD_DIR = TOP_DIR / "upload"  # PDFを一時的に保存するディレクトリ
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 BASE_URL = "http://127.0.0.1:8000"  # 静的ファイルのURL
 
 memory_storage: Dict[str, bytes] = {}  # PDFの保存場所
@@ -111,60 +110,49 @@ def generate_summary(rag_chain: RunnableBinding) -> str:
 def read_root():
     return {"message": "Hello, FastAPI is running!"}
 
+# get_pdf.py
+
+def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
+    pdf_id = str(uuid.uuid4())
+    pdf_url = f"{BASE_URL}/pdf/{pdf_id}.pdf"
+    memory_storage[pdf_id] = pdf_bytes
+
+    copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
+    with open(copy_pdf_path, "wb") as f:
+        f.write(pdf_bytes)
+
+    pdf_text = read_text_from_pdf(str(copy_pdf_path))
+    splited_txt = split_pdf_text(pdf_text)
+    index = embedding_text(splited_txt)
+    retriever = get_retriever(index)
+    rag_chain = create_rag_chain(retriever, groq_chat, prompt)
+    title = generate_title(rag_chain).replace("Title: ", "")
+    if any(phrase in title.lower() for phrase in ["unable to extract", "unable to find"]):
+        title = None
+    else:
+        if "Based on the PDF content" in title or "Based on the provided PDF content" in title:
+            if "However, I can suggest a possible title:" in title:
+                title = title.split("However, I can suggest a possible title:")[-1].strip()
+            else:
+                title = None  # 適切な提案がなかった場合は None にする
+
+    summary = generate_summary(rag_chain).replace("Summary: ", "")
+
+    os.remove(copy_pdf_path)
+
+    return {"pdf_url": pdf_url, "title": title, "summary": summary}
 
 # PDFをアップロード
+# FastAPIのエンドポイント
 @app.post("/upload")
 async def upload_pdf(
-    file: UploadFile = File(...),  # pdf本体
-    category: str = Form(None),  # 論文のカテゴリ
+    file: UploadFile = File(...),
+    category: str = Form(None),
 ):
-    try:
-        "処理1: アップロードしたPDFをメモリに保存し、URLを作成"
-        if not file.filename.endswith(".pdf"):
-            raise HTTPException(
-                status_code=400, detail="Only PDF files are allowed."
-            )  # PDFのみ許可
-        pdf_content = await file.read()  # PDFを読み込む
-        pdf_id = str(uuid.uuid4())  # PDfのIDを発行
-        memory_storage[pdf_id] = pdf_content  # PDFをメモリに保存
-        pdf_url = f"{BASE_URL}/pdf/{pdf_id}.pdf"  # PDFファイルのURLを生成
-
-        file.file.seek(0)  # ポインタを先頭に戻す
-
-        "処理2: RAGを使用し，論文のタイトルと要約を生成"
-        copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
-        with open(copy_pdf_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)  # RAGのために，PDFを一時的に保存
-
-        pdf_text = read_text_from_pdf(str(copy_pdf_path))
-        splited_txt = split_pdf_text(pdf_text)
-        index = embedding_text(splited_txt)
-        retriever = get_retriever(index)
-        rag_chain = create_rag_chain(retriever, groq_chat, prompt)
-        title = generate_title(rag_chain)
-        summary = generate_summary(rag_chain)
-
-        title = title.replace("Title: ", "")
-        summary = summary.replace("Summary: ", "")
-
-        os.remove(copy_pdf_path)  # 一時的に保存したPDFを削除
-
-        # To 植中君: 連携するなら，この辺？
-
-        # 処理3: レスポンスを返す
-        # return {"pdf_url": pdf_url, "title": title, "summary": summary}
-        return UploadPDFResponseSchema(
-            success=True,
-            message="PDF uploaded successfully.",
-            pdf_url=pdf_url,
-        )
-
-    except Exception as e:
-        return UploadPDFResponseSchema(
-            success=False,
-            message=f"An error occurred: {str(e)}",
-            pdf_url=None,
-        )
+    if not file.filename.endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
+    pdf_bytes = await file.read()
+    return analyze_pdf_from_bytes(pdf_bytes)
 
 
 # PDFを開く
