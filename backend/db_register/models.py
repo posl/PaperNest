@@ -5,7 +5,7 @@ class Paper(Base):
     __tablename__ = "papers"
     
     paper_id = Column(String, primary_key=True)
-    title = Column(String, nullable=False)
+    title = Column(String, nullable=True)
     authors = Column(JSON)  # Store as JSON array
     year = Column(Integer)
     conference = Column(String)
