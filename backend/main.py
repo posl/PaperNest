@@ -10,8 +10,8 @@ class UploadPDFResponseSchema(BaseModel):
     pdf_url: str
 
 def main():
-    pdf = "/Users/uenakayuto/main-research/関連研究/GELID先行研究.pdf"
-    category = "フロントから受け取り"
+    pdf = "/Users/yukitoi/Desktop/develop/UNTKT/backend/pdf/Web_application_for_automatic_code_generator_using_a_structured_flowchart.pdf"
+    category = "category1"
     with open(pdf, "rb") as f:
         pdf_bytes = f.read()
         pdf_info = analyze_pdf_from_bytes(pdf_bytes)
@@ -73,7 +73,7 @@ def main():
                 message="PDFの登録が完了しました。",
                 pdf_url=pdf_info["pdf_url"]
             )
-    
+
     print(response)
 
 if __name__ == "__main__":
