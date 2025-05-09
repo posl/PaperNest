@@ -17,7 +17,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_groq import ChatGroq
-from models import UploadPDFResponseSchema
 from pypdf import PdfReader
 
 app = FastAPI()  # インスタンス作成
@@ -141,21 +140,7 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
 
     os.remove(copy_pdf_path)
 
-    # To 植中君: 連携するなら，この辺？
-    # 処理3: レスポンスを返す
-    # return {"pdf_url": pdf_url, "title": title, "summary": summary}
-    return UploadPDFResponseSchema(
-        success=True,
-        message="PDF uploaded successfully.",
-        pdf_url=pdf_url,
-    )
-
-    # except Exception as e:
-    #     return UploadPDFResponseSchema(
-    #         success=False,
-    #         message=f"An error occurred: {str(e)}",
-    #         pdf_url=None,
-    #     )
+    return {"pdf_url": pdf_url, "title": title, "summary": summary}
 
 # PDFをアップロード
 # FastAPIのエンドポイント
