@@ -1,17 +1,14 @@
+import sys
+from schema import UploadPDFResponseSchema, PaperSchema
 from db_register.get_pdf import analyze_pdf_from_bytes
 from db_register.metadata_fetcher import fetch_metadata
 from db_register.db_register import register_paper
-from pydantic import BaseModel
+from db_register.database.database import SessionLocal
+from db_register.models import Paper
 
-# レスポンススキーマ
-class UploadPDFResponseSchema(BaseModel):
-    success: bool
-    message: str
-    pdf_url: str
-
-def main():
-    pdf = "/Users/yukitoi/Desktop/develop/UNTKT/backend/pdf/Web_application_for_automatic_code_generator_using_a_structured_flowchart.pdf"
-    category = "category1"
+def register_pdf():
+    pdf = "/Users/uenakayuto/main-research/関連研究/バグ分類2010.pdf"
+    category = "フロントから受け取り"
     with open(pdf, "rb") as f:
         pdf_bytes = f.read()
         pdf_info = analyze_pdf_from_bytes(pdf_bytes)
@@ -75,6 +72,35 @@ def main():
             )
 
     print(response)
+    return response
+
+def get_all():
+    db = SessionLocal()
+    try:
+        papers = db.query(Paper).all()
+        response = [PaperSchema.model_validate(p) for p in papers]
+        for item in response:
+            print(item.model_dump())
+        return response
+    except Exception as e:
+        print(f"データベースからの取得中にエラーが発生しました: {e}")
+    finally:
+        db.close()
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python main.py [register|get_all]")
+        sys.exit(1)
+
+    command = sys.argv[1]
+
+    if command == "register":
+        register_pdf()
+    elif command == "get_all":
+        get_all()
+    else:
+        print(f"Unknown command: {command}")
+        print("Usage: python main.py [register|get_all]")
 
 if __name__ == "__main__":
     main()
