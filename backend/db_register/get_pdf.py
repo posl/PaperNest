@@ -19,8 +19,6 @@ from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_groq import ChatGroq
 from pypdf import PdfReader
 
-from .models import UploadPDFResponseSchema
-
 app = FastAPI()  # インスタンス作成
 TOP_DIR = Path(__file__).resolve().parent
 UPLOAD_DIR = TOP_DIR / "upload"  # PDFを一時的に保存するディレクトリ
@@ -112,9 +110,7 @@ def generate_summary(rag_chain: RunnableBinding) -> str:
 def read_root():
     return {"message": "Hello, FastAPI is running!"}
 
-
 # get_pdf.py
-
 
 def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
     pdf_id = str(uuid.uuid4())
@@ -131,19 +127,12 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
     retriever = get_retriever(index)
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
     title = generate_title(rag_chain).replace("Title: ", "")
-    if any(
-        phrase in title.lower() for phrase in ["unable to extract", "unable to find"]
-    ):
+    if any(phrase in title.lower() for phrase in ["unable to extract", "unable to find"]):
         title = None
     else:
-        if (
-            "Based on the PDF content" in title
-            or "Based on the provided PDF content" in title
-        ):
+        if "Based on the PDF content" in title or "Based on the provided PDF content" in title:
             if "However, I can suggest a possible title:" in title:
-                title = title.split("However, I can suggest a possible title:")[
-                    -1
-                ].strip()
+                title = title.split("However, I can suggest a possible title:")[-1].strip()
             else:
                 title = None  # 適切な提案がなかった場合は None にする
 
@@ -153,14 +142,13 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
 
     return {"pdf_url": pdf_url, "title": title, "summary": summary}
 
-
 # PDFをアップロード
+# FastAPIのエンドポイント
 @app.post("/upload")
 async def upload_pdf(
     file: UploadFile = File(...),
     category: str = Form(None),
 ):
-    # PDFファイルのバリデーション
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
     pdf_bytes = await file.read()
