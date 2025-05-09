@@ -72,6 +72,7 @@ def register_pdf():
             )
     
     print(response)
+    return response
 
 def get_all():
     db = SessionLocal()
@@ -80,6 +81,7 @@ def get_all():
         response = [PaperSchema.model_validate(p) for p in papers]
         for item in response:
             print(item.model_dump())
+        return response
     except Exception as e:
         print(f"データベースからの取得中にエラーが発生しました: {e}")
     finally:
