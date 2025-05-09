@@ -3,7 +3,7 @@ from db_register.database.database import Base
 
 class Paper(Base):
     __tablename__ = "papers"
-    
+
     paper_id = Column(String, primary_key=True)
     title = Column(String, nullable=False)
     authors = Column(JSON)  # Store as JSON array
