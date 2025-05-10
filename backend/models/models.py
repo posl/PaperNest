@@ -1,6 +1,5 @@
-from sqlalchemy import JSON, Column, Integer, String
-
-from db_register.database.database import Base
+from sqlalchemy import Column, String, Integer, JSON
+from backend.database.database import Base
 
 
 class Paper(Base):

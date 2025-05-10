@@ -1,6 +1,6 @@
 # 🎯 ハッカソン（2025年・修士学生）リポジトリ
 
-このリポジトリは、2025年5月に開催されたハッカソンのリポジトリです。
+このリポジトリは，2025年5月に開催されたハッカソンのリポジトリです．
 
 ## 🚀 セットアップ手順（フロントエンド）
 
@@ -21,23 +21,28 @@ npm run dev
 uv sync
 ```
 
-### Step2: 仮想環境内に入り，ディレクトリ移動
+### Step2: 仮想環境のアクティベート
 ```bash
 source .venv/bin/activate
 ```
-```bash
-cd rag
-```
 
 ### Step3: サーバーを起動
+- このコマンドは2025-hackathon/で実行してください．
 ```bash
-python3 -m uvicorn get_pdf:app --reload
+uvicorn backend.main:app --reload
 ```
 
-
-## APIのテスト
-別ターミナルで以下を実行．
-PDFのUDL，タイトル，要約が返ってくる．
+## 論文の登録
+- サーバーを起動したターミナルとは別のターミナルで以下を実行してください．
 ```bash
-curl -X POST "http://127.0.0.1:8000/upload" -F "file=@(PDFの絶対パス)"
+curl -X POST "http://127.0.0.1:8000/upload" -F "file=@/absolute/path/to/your/pdf" -F "category=research_category"
 ```
+- 論文がデータベースに登録されます．
+- 登録ができたかどうかのレスポンスが返ってきます．
+
+## 論文の全件取得
+- サーバーを起動したターミナルとは別のターミナルで以下を実行してください．
+```bash
+curl http://127.0.0.1:8000/get_all_papers
+```
+- 全ての論文の全てのメタデータが返ってきます．

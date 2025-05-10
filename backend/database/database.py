@@ -5,9 +5,9 @@ from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
 
-# 3つ上のディレクトリを取得
+# 2つ上のディレクトリを取得
 base_dir = os.path.dirname(os.path.abspath(__file__))
-grandparent_dir = os.path.dirname(os.path.dirname(os.path.dirname(base_dir)))  # 3つ上
+grandparent_dir = os.path.dirname(os.path.dirname(base_dir))  # 2つ上
 db_path = os.path.join(grandparent_dir, "papers.db")
 
 DATABASE_URL = f"sqlite:///{db_path}"
