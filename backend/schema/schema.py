@@ -25,7 +25,7 @@ class UploadPDFResponseSchema(BaseModel):
     message: str
     pdf_url: str  # 保存されたPDFのURL
 
-#　質問受け付け用スキーマ
+# 質問受け付け用スキーマ
 class PDFQuestionRequestSchema(BaseModel):
     paper_id: str
     question: str

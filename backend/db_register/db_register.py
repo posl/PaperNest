@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy.orm import Session
-from db_register.database.database import SessionLocal, engine, Base
-from db_register.models import Paper
+from backend.database.database import SessionLocal, engine, Base
+from backend.models.models import Paper
 # from metadata_fetcher import fetch_metadata
 
 # 初回のみテーブル作成
