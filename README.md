@@ -35,7 +35,7 @@ uvicorn backend.main:app --reload
 ## 論文の登録
 - サーバーを起動したターミナルとは別のターミナルで以下を実行してください．
 ```bash
-curl -X POST "http://127.0.0.1:8000/upload" -F "file=@/absolute/path/to/your/pdf"
+curl -X POST "http://127.0.0.1:8000/upload" -F "file=@/absolute/path/to/your/pdf" -F "category=research_category"
 ```
 - 論文がデータベースに登録されます．
 - 登録ができたかどうかのレスポンスが返ってきます．
