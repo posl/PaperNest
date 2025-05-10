@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
-# 論文情報スキーマ 
+# 論文情報スキーマ
 class PaperSchema(BaseModel):
     paper_id: str
     title: str
@@ -25,7 +25,7 @@ class UploadPDFResponseSchema(BaseModel):
     message: str
     pdf_url: str  # 保存されたPDFのURL
 
-#　質問受け付け用スキーマ
+# 質問受け付け用スキーマ
 class PDFQuestionRequestSchema(BaseModel):
     paper_id: str
     question: str

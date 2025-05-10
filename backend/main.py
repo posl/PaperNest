@@ -1,13 +1,15 @@
 import sys
-from schema import UploadPDFResponseSchema, PaperSchema
-from db_register.get_pdf import analyze_pdf_from_bytes
-from db_register.metadata_fetcher import fetch_metadata
-from db_register.db_register import register_paper
+
 from db_register.database.database import SessionLocal
+from db_register.db_register import register_paper
+from backend.api.get_pdf import analyze_pdf_from_bytes
+from db_register.metadata_fetcher import fetch_metadata
 from db_register.models import Paper
+from schema import PaperSchema, UploadPDFResponseSchema
+
 
 def register_pdf():
-    pdf = "/Users/uenakayuto/main-research/関連研究/バグ分類2010.pdf"
+    pdf = "/Users/yukitoi/Desktop/research/references/code-generation/Exploring the Effect of Multiple Natural Languages on Code Suggestion Using GitHub Copilot.pdf"
     category = "フロントから受け取り"
     with open(pdf, "rb") as f:
         pdf_bytes = f.read()
@@ -36,7 +38,7 @@ def register_pdf():
         response = UploadPDFResponseSchema(
             success=False,
             message="登録中にエラーが発生しました．",
-            pdf_url=pdf_info["pdf_url"]
+            pdf_url=pdf_info["pdf_url"],
         )
     elif suc_or_fai == "success":
         # 個別の項目が取得できているかチェック
@@ -62,17 +64,18 @@ def register_pdf():
             response = UploadPDFResponseSchema(
                 success=False,
                 message=f"{failed_info} の取得に失敗しました。",
-                pdf_url=pdf_info["pdf_url"]
+                pdf_url=pdf_info["pdf_url"],
             )
         else:
             response = UploadPDFResponseSchema(
                 success=True,
                 message="PDFの登録が完了しました。",
-                pdf_url=pdf_info["pdf_url"]
+                pdf_url=pdf_info["pdf_url"],
             )
 
     print(response)
     return response
+
 
 def get_all():
     db = SessionLocal()
@@ -86,6 +89,7 @@ def get_all():
         print(f"データベースからの取得中にエラーが発生しました: {e}")
     finally:
         db.close()
+
 
 def main():
     if len(sys.argv) < 2:
@@ -101,6 +105,7 @@ def main():
     else:
         print(f"Unknown command: {command}")
         print("Usage: python main.py [register|get_all]")
+
 
 if __name__ == "__main__":
     main()

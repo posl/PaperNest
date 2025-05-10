@@ -6,7 +6,7 @@ from typing import Dict
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -17,13 +17,14 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_groq import ChatGroq
+from main import APP, BASE_URL
 from pypdf import PdfReader
 
-app = FastAPI()  # インスタンス作成
+app = APP
+base_url = BASE_URL
 TOP_DIR = Path(__file__).resolve().parent
 UPLOAD_DIR = TOP_DIR / "upload"  # PDFを一時的に保存するディレクトリ
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-BASE_URL = "http://127.0.0.1:8000"  # 静的ファイルのURL
 
 memory_storage: Dict[str, bytes] = {}  # PDFの保存場所
 
@@ -110,11 +111,13 @@ def generate_summary(rag_chain: RunnableBinding) -> str:
 def read_root():
     return {"message": "Hello, FastAPI is running!"}
 
+
 # get_pdf.py
+
 
 def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
     pdf_id = str(uuid.uuid4())
-    pdf_url = f"{BASE_URL}/pdf/{pdf_id}.pdf"
+    pdf_url = f"{base_url}/pdf/{pdf_id}.pdf"
     memory_storage[pdf_id] = pdf_bytes
 
     copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
@@ -127,12 +130,19 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
     retriever = get_retriever(index)
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
     title = generate_title(rag_chain).replace("Title: ", "")
-    if any(phrase in title.lower() for phrase in ["unable to extract", "unable to find"]):
+    if any(
+        phrase in title.lower() for phrase in ["unable to extract", "unable to find"]
+    ):
         title = None
     else:
-        if "Based on the PDF content" in title or "Based on the provided PDF content" in title:
+        if (
+            "Based on the PDF content" in title
+            or "Based on the provided PDF content" in title
+        ):
             if "However, I can suggest a possible title:" in title:
-                title = title.split("However, I can suggest a possible title:")[-1].strip()
+                title = title.split("However, I can suggest a possible title:")[
+                    -1
+                ].strip()
             else:
                 title = None  # 適切な提案がなかった場合は None にする
 
@@ -141,6 +151,7 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
     os.remove(copy_pdf_path)
 
     return {"pdf_url": pdf_url, "title": title, "summary": summary}
+
 
 # PDFをアップロード
 # FastAPIのエンドポイント
