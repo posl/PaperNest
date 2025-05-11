@@ -130,7 +130,7 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
     retriever = get_retriever(index)
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
     title = generate_title(rag_chain).replace("Title: ", "")
-    if any(phrase in title.lower() for phrase in ["unable to extract", "unable to find"]):
+    if any(phrase in title.lower() for phrase in ["unable to extract", "unable to find", "unfortunately"]):
         title = None
     else:
         if "Based on the PDF content" in title or "Based on the provided PDF content" in title:
