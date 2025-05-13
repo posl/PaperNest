@@ -6,6 +6,7 @@ import { TableSection } from "../../components/Table";
 import { QuestionInput } from "../../components/QuestionInput";
 import { FloatingUploadButton } from "../../components/FloatingUploadButton";
 import { useLandingPageState } from "../LandingPage/hooks/useLandingPageState";
+import { ModalPaperList } from "../../components/ModalPaperList";
 
 
 export const LandingPage = () => {
@@ -93,6 +94,80 @@ export const LandingPage = () => {
     );
   };
 
+  //質問ボックス用
+  const [modalOpen, setModalOpen] = useState(false);
+  const [recommendedPapers, setRecommendedPapers] = useState([]);
+
+  // --- 質問した時に帰ってきた仮の論文DB ---
+  const paperDatabase = [
+    {
+      id: 1,
+      title: "多言語コード生成におけるプロンプト設計の影響",
+      author: "Tokumasu Haruka",
+      year: "2024",
+      conference: "EMNLP",
+      "core-rank": "A",
+      book: "なし",
+      abstract: "本研究では、大規模言語モデルによる多言語コード生成において、入力言語や翻訳戦略が生成精度に与える影響を検証した。日中英の3言語で比較を行い、有効なプロンプト構成について議論する。"
+    },
+    {
+      id: 2,
+      title: "コード生成精度における自然言語の影響",
+      author: "Sato Keisuke",
+      year: "2023",
+      conference: "ACL",
+      "core-rank": "A*",
+      book: "あり",
+      abstract: "本研究は、自然言語記述がコード生成性能に与える影響を詳細に分析する。特に曖昧性と記述スタイルの違いが出力コードに及ぼす影響に焦点を当てる。"
+    },
+    {
+      id: 3,
+      title: "翻訳精度がコード生成に与える副次的影響の分析",
+      author: "Li Wei",
+      year: "2022",
+      conference: "NAACL",
+      "core-rank": "B",
+      book: "なし",
+      abstract: "言語間翻訳を介してコード生成タスクを実行した場合に、翻訳品質がどのように精度へ波及するかを定量的に評価した。BLEUスコアとの相関分析も含む。"
+    },
+    {
+      id: 4,
+      title: "LLMの内部表現における言語依存性の可視化",
+      author: "Suzuki Takumi",
+      year: "2021",
+      conference: "ICLR",
+      "core-rank": "A",
+      book: "あり",
+      abstract: "本研究では、LLMの活性化パターンを解析し、異なる自然言語入力がモデル内部のどのようなニューロンに影響を与えるかを視覚化した。言語固有ニューロンの存在を示す。"
+    },
+    {
+      id: 5,
+      title: "生成AIにおける物語的問題文の課題",
+      author: "Tanaka Mei",
+      year: "2020",
+      conference: "COLING",
+      "core-rank": "C",
+      book: "なし",
+      abstract: "AtCoderおよびLeetCodeの問題文を物語性の有無で分類し、物語的要素がコード生成精度に与える影響を実験的に示す。説明的文の方が精度が高い傾向が見られた。"
+    }
+  ];
+  
+
+  // --- 質問送信時の処理関数 ---
+  const handleQuestionSubmit = async (question) => {
+    const ids = await fetchRelatedPaperIds(question);
+    const papers = ids
+      .map(id => paperDatabase.find(p => p.id === id))
+      .filter(Boolean);
+    setRecommendedPapers(papers);
+    setModalOpen(true);
+  };
+
+  const fetchRelatedPaperIds = async (question) => {
+    console.log("質問:", question);
+    return [1, 2, 3, 4, 5];
+  };
+
   return (
     <div className="bg-white flex flex-row justify-center w-full"
          onDragOver={handleDragOver} // 画面全体でドラッグを検知
@@ -149,9 +224,14 @@ export const LandingPage = () => {
 
         {/* Question input */}
         <div className="absolute bottom-[50px] left-1/2 transform -translate-x-1/2 w-[999px]">
-          <QuestionInput />
+          <QuestionInput onSubmit={handleQuestionSubmit}/>
         </div>
-
+        {/* Modal for related papers */}
+        <ModalPaperList
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          papers={recommendedPapers}
+        />
         {/* Floating action button */}
         <FloatingUploadButton
          isPdfOpen={isPdfOpen}
