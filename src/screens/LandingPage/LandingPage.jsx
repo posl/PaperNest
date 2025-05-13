@@ -105,6 +105,7 @@ export const LandingPage = () => {
           isMenuOpen={isMenuOpen}
           setIsMenuOpen={setIsMenuOpen}
           tabs={tabs}
+          setTabs={setTabs}
           selectedTabId={selectedTabId}
           setSelectedTabId={setSelectedTabId}
           handleAddTab={handleAddTab}
