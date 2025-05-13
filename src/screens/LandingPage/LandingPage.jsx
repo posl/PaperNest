@@ -108,7 +108,8 @@ export const LandingPage = () => {
       conference: "EMNLP",
       "core-rank": "A",
       book: "なし",
-      abstract: "本研究では、大規模言語モデルによる多言語コード生成において、入力言語や翻訳戦略が生成精度に与える影響を検証した。日中英の3言語で比較を行い、有効なプロンプト構成について議論する。"
+      abstract: "本研究では、大規模言語モデルによる多言語コード生成において、入力言語や翻訳戦略が生成精度に与える影響を検証した。日中英の3言語で比較を行い、有効なプロンプト構成について議論する。",
+      pdf: "https://example.com/paper1.pdf"
     },
     {
       id: 2,
@@ -118,7 +119,8 @@ export const LandingPage = () => {
       conference: "ACL",
       "core-rank": "A*",
       book: "あり",
-      abstract: "本研究は、自然言語記述がコード生成性能に与える影響を詳細に分析する。特に曖昧性と記述スタイルの違いが出力コードに及ぼす影響に焦点を当てる。"
+      abstract: "本研究は、自然言語記述がコード生成性能に与える影響を詳細に分析する。特に曖昧性と記述スタイルの違いが出力コードに及ぼす影響に焦点を当てる。",
+      pdf: "https://example.com/paper2.pdf"
     },
     {
       id: 3,
@@ -128,7 +130,8 @@ export const LandingPage = () => {
       conference: "NAACL",
       "core-rank": "B",
       book: "なし",
-      abstract: "言語間翻訳を介してコード生成タスクを実行した場合に、翻訳品質がどのように精度へ波及するかを定量的に評価した。BLEUスコアとの相関分析も含む。"
+      abstract: "言語間翻訳を介してコード生成タスクを実行した場合に、翻訳品質がどのように精度へ波及するかを定量的に評価した。BLEUスコアとの相関分析も含む。",
+      pdf: "https://example.com/paper3.pdf"
     },
     {
       id: 4,
@@ -138,7 +141,8 @@ export const LandingPage = () => {
       conference: "ICLR",
       "core-rank": "A",
       book: "あり",
-      abstract: "本研究では、LLMの活性化パターンを解析し、異なる自然言語入力がモデル内部のどのようなニューロンに影響を与えるかを視覚化した。言語固有ニューロンの存在を示す。"
+      abstract: "本研究では、LLMの活性化パターンを解析し、異なる自然言語入力がモデル内部のどのようなニューロンに影響を与えるかを視覚化した。言語固有ニューロンの存在を示す。",
+      pdf: "https://example.com/paper4.pdf"
     },
     {
       id: 5,
@@ -148,7 +152,8 @@ export const LandingPage = () => {
       conference: "COLING",
       "core-rank": "C",
       book: "なし",
-      abstract: "AtCoderおよびLeetCodeの問題文を物語性の有無で分類し、物語的要素がコード生成精度に与える影響を実験的に示す。説明的文の方が精度が高い傾向が見られた。"
+      abstract: "AtCoderおよびLeetCodeの問題文を物語性の有無で分類し、物語的要素がコード生成精度に与える影響を実験的に示す。説明的文の方が精度が高い傾向が見られた。",
+      pdf: "https://example.com/paper5.pdf"
     }
   ];
   

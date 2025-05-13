@@ -59,6 +59,20 @@ export const ModalPaperList = ({ isOpen, onClose, papers }) => {
                 {selectedPaper.abstract}
               </div>
             </div>
+
+            {/* ✅ PDFリンクボタン */}
+            {selectedPaper.pdf && (
+            <div className="mt-4 text-right">
+                <a
+                href={selectedPaper.pdf}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-4 py-2 bg-purple-200 text-black rounded hover:bg-purple-300 transition"
+                >
+                📄 PDFを見る
+                </a>
+            </div>
+            )}
           </div>
         )}
 
