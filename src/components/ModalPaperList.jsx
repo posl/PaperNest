@@ -80,9 +80,10 @@ export const ModalPaperList = ({ isOpen, onClose, papers }) => {
         <div className="text-center mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-3xl font-bold px-2"
+            aria-label="閉じる"
           >
-            閉じる
+            ×
           </button>
         </div>
       </div>

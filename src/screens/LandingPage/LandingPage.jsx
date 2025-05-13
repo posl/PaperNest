@@ -36,12 +36,12 @@ export const LandingPage = () => {
 
       // Flat list of all papers with theme field
   const allPapers = [
-    { id: 1, title: "example1", author: "John Doe", year: "2021", theme: 1 },
-    { id: 2, title: "example2", author: "Jane Smith", year: "2020", theme: 1 },
-    { id: 3, title: "example3", author: "Author A", year: "2022", theme: 2 },
-    { id: 4, title: "example4", author: "Author B", year: "2023", theme: 2 },
-    { id: 5, title: "example5", author: "Writer X", year: "2018", theme: 3 },
-    { id: 6, title: "example6", author: "Writer Y", year: "2057", theme: 3 },
+    { id: 1, title: "example1", author: "John Doe", year: "2021", theme: 1 , pdf: "https://example.com/paper1.pdf"},
+    { id: 2, title: "example2", author: "Jane Smith", year: "2020", theme: 1 , pdf: "https://example.com/paper2.pdf"},
+    { id: 3, title: "example3", author: "Author A", year: "2022", theme: 2, pdf: "https://example.com/paper3.pdf"},
+    { id: 4, title: "example4", author: "Author B", year: "2023", theme: 2, pdf: "https://example.com/paper4.pdf"},
+    { id: 5, title: "example5", author: "Writer X", year: "2018", theme: 3, pdf: "https://example.com/paper5.pdf"},
+    { id: 6, title: "example6", author: "Writer Y", year: "2057", theme: 3, pdf: "https://example.com/paper6.pdf"},
   ];
 
   const [tableData, setTableData] = useState(
