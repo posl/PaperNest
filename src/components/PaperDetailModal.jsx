@@ -84,7 +84,7 @@ export const PaperDetailModal = ({
             {!isEditing && (
             <button
                 onClick={onStartEdit}
-                className="inline-flex px-5 py-2 text-sky-700 rounded-md hover:bg-gray-100 hover:text-sky-900 transition font-semibold"
+                className="inline-flex px-3 py-2 text-sky-700 rounded-md hover:bg-gray-100 hover:text-sky-900 transition font-semibold"
             >
                 Edit
             </button>

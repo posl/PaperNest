@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "./ui/button";
 
-export const EditForm = ({ editedData, handleInputChange, onSave, onCancel }) => {
+export const EditForm = ({ editedData, handleInputChange, onSave, onCancel, onRemovePdf }) => {
   return (
     <div className="flex flex-col h-full m-4">
       {/* スクロール可能なフォーム部分 */}
@@ -100,6 +100,12 @@ export const EditForm = ({ editedData, handleInputChange, onSave, onCancel }) =>
 
       {/* フッターボタン：常に画面下部に表示される */}
       <div className="border-t pt-4 pb-0 px-6 mb-0 flex justify-end gap-4 bg-white">
+        <Button 
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+          onClick={onRemovePdf}
+        >
+          PDF削除
+        </Button>
         <Button
           className="bg-gray-500 text-white px-4 py-2 rounded"
           onClick={onCancel}
