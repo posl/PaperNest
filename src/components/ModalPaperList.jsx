@@ -1,18 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { FaQuoteRight, FaFilePdf } from "react-icons/fa";
+import { BibtexModal } from "./BibtexModal";
 
 export const ModalPaperList = ({ isOpen, onClose, papers }) => {
   const [selectedPaperId, setSelectedPaperId] = useState(null);
+  const [isBibtexOpen, setIsBibtexOpen] = useState(false);
 
-  // 最初の1件を自動で選択
   useEffect(() => {
     if (papers.length > 0) {
       setSelectedPaperId(papers[0].id);
     }
   }, [papers]);
 
+  // ✅ 関連度順にソート
+  const sortedPapers = useMemo(() => {
+    return [...papers].sort((a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0));
+  }, [papers]);
+
   if (!isOpen) return null;
 
-  const selectedPaper = papers.find(p => p.id === selectedPaperId);
+  const selectedPaper = sortedPapers.find((p) => p.id === selectedPaperId);
 
   return (
     <div
@@ -20,72 +27,92 @@ export const ModalPaperList = ({ isOpen, onClose, papers }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl p-8 max-w-2xl w-[90%] shadow-xl text-left relative overflow-y-auto max-h-[90vh]"
+        className="bg-white rounded-2xl p-8 max-w-3xl w-[90%] shadow-2xl text-left relative overflow-y-auto max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-semibold mb-4 text-center">関連論文 5 選</h2>
+        {/* 閉じるボタン */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition"
+          aria-label="閉じる"
+        >
+          ×
+        </button>
 
-        {/* タイトル一覧 */}
-        <ul className="space-y-2 mb-6">
-          {papers.map((paper) => (
-            <li key={paper.id}>
-              <button
-                onClick={() => setSelectedPaperId(paper.id)}
-                className={`underline transition text-left ${
-                  paper.id === selectedPaperId
-                    ? "text-blue-800 font-semibold"
-                    : "text-blue-600 hover:text-blue-800"
-                }`}
-              >
-                {paper.title}
-              </button>
-            </li>
+        <h2 className="text-xl font-semibold tracking-tight text-gray-900 text-center mb-6">
+          推薦論文
+        </h2>
+
+        {/* タイトル一覧（関連度順） */}
+        <div className="flex flex-col gap-2 mb-6">
+          {sortedPapers.map((paper) => (
+            <button
+              key={paper.id}
+              onClick={() => setSelectedPaperId(paper.id)}
+              className={`text-left px-4 py-2 rounded-lg transition font-medium ${
+                paper.id === selectedPaperId
+                  ? "bg-sky-100 text-sky-800"
+                  : "hover:bg-gray-100 text-gray-800"
+              }`}
+            >
+              {paper.title}
+              {/* ↓ 表示したければスコア表示も */}
+              <span className="ml-2 text-xs text-gray-400">(一致度：{paper.relevanceScore})</span>
+            </button>
           ))}
-        </ul>
+        </div>
 
-        {/* 詳細表示 */}
+        {/* 詳細表示（略） */}
         {selectedPaper && (
-          <div className="bg-gray-100 p-4 rounded-md border border-gray-300 space-y-2">
-            <h3 className="text-lg font-semibold">詳細情報</h3>
-            <p><strong>タイトル:</strong> {selectedPaper.title}</p>
-            <p><strong>著者:</strong> {selectedPaper.author}</p>
-            <p><strong>発表年:</strong> {selectedPaper.year}</p>
-            <p><strong>会議名:</strong> {selectedPaper.conference}</p>
-            <p><strong>Coreランク:</strong> {selectedPaper["core-rank"]}</p>
-            <p><strong>書籍:</strong> {selectedPaper.book}</p>
-            <div>
-              <strong>概要:</strong>
-              <div className="mt-1 max-h-[200px] overflow-y-auto bg-white p-2 rounded border border-gray-200">
-                {selectedPaper.abstract}
+          <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-md space-y-3">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-700">詳細情報</h3>
+              <div className="flex gap-2">
+                {selectedPaper.bibtex && (
+                  <button
+                    onClick={() => setIsBibtexOpen(true)}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-gray-400 rounded-md hover:text-[#aac2de] transition text-xs"
+                  >
+                    <FaQuoteRight />
+                  </button>
+                )}
+                {selectedPaper.pdf && (
+                  <a
+                    href={selectedPaper.pdf}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#aac2de] text-white rounded-md hover:bg-[#90b4d4] transition text-sm"
+                  >
+                    <FaFilePdf />
+                    PDF
+                  </a>
+                )}
               </div>
             </div>
 
-            {/* ✅ PDFリンクボタン */}
-            {selectedPaper.pdf && (
-            <div className="mt-4 text-right">
-                <a
-                href={selectedPaper.pdf}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block px-4 py-2 bg-purple-200 text-black rounded hover:bg-purple-300 transition"
-                >
-                📄 PDFを見る
-                </a>
+            <p><strong>Title:</strong> {selectedPaper.title}</p>
+            <p><strong>Author:</strong> {selectedPaper.author}</p>
+            <p><strong>Year:</strong> {selectedPaper.year}</p>
+            <p><strong>Conferencce:</strong> {selectedPaper.conference}</p>
+            <p><strong>Core-Rank:</strong> {selectedPaper["core-rank"]}</p>
+            <p><strong>Book:</strong> {selectedPaper.book}</p>
+
+            <div>
+              <p className="font-semibold text-gray-700 mb-1">Abstract:</p>
+              <div className="mt-1 max-h-[200px] overflow-y-auto bg-gray-50 p-3 rounded-lg text-sm text-gray-800 border">
+                {selectedPaper.abstract}
+              </div>
             </div>
-            )}
           </div>
         )}
 
-        {/* 閉じるボタン */}
-        <div className="text-center mt-6">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-3xl font-bold px-2"
-            aria-label="閉じる"
-          >
-            ×
-          </button>
-        </div>
+        {/* BibTeXモーダル */}
+        {selectedPaper && selectedPaper.bibtex && isBibtexOpen && (
+          <BibtexModal
+            bibtex={selectedPaper.bibtex}
+            onClose={() => setIsBibtexOpen(false)}
+          />
+        )}
       </div>
     </div>
   );

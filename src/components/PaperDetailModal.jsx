@@ -90,11 +90,11 @@ export const PaperDetailModal = ({
                 <div className="relative">
                   <textarea
                     readOnly
-                    className="resize-y w-full p-4 border rounded-lg bg-gray-50 text-sm font-mono max-h-[200px] overflow-y-auto"
+                    className="resize-y w-full p-4 border rounded-lg bg-gray-50 text-sm font-mono max-h-[200px] overflow-y-auto focus:outline-none"
                     value={selectedRow.bibtex}
                   />
                   <Button
-                    className="absolute top-2 right-2 px-3 py-1 text-sm rounded-md flex items-center gap-2 bg-gray-300 text-gray-600 hover:bg-sky-700 transition"
+                    className="absolute top-2 right-2 px-3 py-1 text-sm rounded-md flex items-center gap-2 bg-gray-300 text-gray-600 hover:bg-gray-400 transition"
                     onClick={handleCopyBibtex}
                   >
                     <FaRegCopy />

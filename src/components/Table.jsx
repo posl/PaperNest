@@ -92,7 +92,7 @@ export const TableSection = ({ visibleColumns, tableData, onUpdateRow }) => {
                     <TableHead
                       key={col.id}
                       onClick={() => handleSort(col.id)}
-                      className="px-4 py-3 text-left text-gray-700 font-semibold tracking-wide cursor-pointer select-none hover:text-sky-300"
+                      className="px-4 py-3 text-left text-gray-700 font-semibold tracking-wide cursor-pointer select-none hover:text-sky-700"
                     >
                       {col.label}
                       {sortColumn === col.id && (
