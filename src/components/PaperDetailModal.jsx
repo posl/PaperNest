@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "../components/ui/button";
 import { EditForm } from "./EditForm";
-import { FaFilePdf, FaRegCopy } from "react-icons/fa";
+import { FaFilePdf } from "react-icons/fa";
+import { BibtexModal } from "./BibtexModal";
+import { FaQuoteRight } from "react-icons/fa";
 
 export const PaperDetailModal = ({
   selectedRow,
@@ -13,16 +15,9 @@ export const PaperDetailModal = ({
   onCancelEdit,
   onInputChange,
 }) => {
-  if (!selectedRow) return null;
+  const [isBibtexOpen, setIsBibtexOpen] = useState(false);
 
-  const handleCopyBibtex = () => {
-    if (selectedRow.bibtex) {
-      navigator.clipboard.writeText(selectedRow.bibtex);
-      alert("BibTeXをコピーしました！");
-    } else {
-      alert("BibTeX情報がありません");
-    }
-  };
+  if (!selectedRow) return null;
 
   const openPdf = () => {
     if (selectedRow.pdf) {
@@ -43,14 +38,16 @@ export const PaperDetailModal = ({
       >
         {/* 閉じるボタン */}
         <button
-          className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition"
+          className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition"
           onClick={onClose}
         >
           ×
         </button>
 
+
+
         {/* タイトル */}
-        <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">論文詳細情報</h2>
+        <h2 className="text-2xl font-bold text-center mb-8 text-gray-600 border-b border-gray-200 pb-4">論文詳細情報</h2>
 
         {/* 内容 */}
         {isEditing ? (
@@ -81,50 +78,52 @@ export const PaperDetailModal = ({
               </div>
             </div>
 
-
-
-            {/* BibTeX表示とコピー */}
-            {selectedRow.bibtex && (
-              <div className="mt-6">
-                <p className="font-semibold text-lg mb-1">BibTeX:</p>
-                <div className="relative">
-                  <textarea
-                    readOnly
-                    className="resize-y w-full p-4 border rounded-lg bg-gray-50 text-sm font-mono max-h-[200px] overflow-y-auto focus:outline-none"
-                    value={selectedRow.bibtex}
-                  />
-                  <Button
-                    className="absolute top-2 right-2 px-3 py-1 text-sm rounded-md flex items-center gap-2 bg-gray-300 text-gray-600 hover:bg-gray-400 transition"
-                    onClick={handleCopyBibtex}
-                  >
-                    <FaRegCopy />
-                  </Button>
-                </div>
-              </div>
+            {/* PDF & BibTeXボタン */}
+            <div className="flex justify-end gap-4 mt-8">
+            {/* Editテキストリンク */}
+            {!isEditing && (
+            <button
+                onClick={onStartEdit}
+                className="inline-flex px-5 py-2 text-sky-700 rounded-md hover:bg-gray-100 hover:text-sky-900 transition font-semibold"
+            >
+                Edit
+            </button>
             )}
-
-            {/* 編集ボタン & PDFボタン */}
-            <div className="flex justify-between items-center mt-6">
-            {/* 左端：PDFボタン */}
-            <Button
+              {/* <Button
+                className="flex items-center gap-2 px-3 py-1.5 text-gray-500 rounded-md hover:bg-white hover:text-[#aac2de] transition font-semibold text-xs"
+                onClick={() => setIsBibtexOpen(true)}
+              >
+                <FaQuoteRight />
+                
+              </Button> */}
+              <button
+                onClick={() => setIsBibtexOpen(true)}
+                className="gap-2 px-3 py-2 text-gray-500 rounded-full hover:text-gray-600 hover:bg-gray-100 transition"
+                >
+                <FaQuoteRight />
+                </button>
+              <Button
                 className="bg-[#aac2de] text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-[#90b4d4] transition"
                 onClick={openPdf}
-            >
+              >
                 <FaFilePdf />
                 PDF
-            </Button>
+              </Button>
 
-            {/* 右端：編集ボタン */}
-            <Button
-                className="bg-sky-600 text-white px-6 py-2 rounded-lg hover:bg-sky-700 transition"
-                onClick={onStartEdit}
-            >
-                編集
-            </Button>
+
             </div>
           </div>
         )}
       </div>
+
+      {/* BibTeXモーダル */}
+      {isBibtexOpen && (
+        <BibtexModal
+          isOpen={isBibtexOpen}
+          onClose={() => setIsBibtexOpen(false)}
+          bibtex={selectedRow.bibtex}
+        />
+      )}
     </div>
   );
 };

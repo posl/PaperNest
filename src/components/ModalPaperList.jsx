@@ -71,7 +71,7 @@ export const ModalPaperList = ({ isOpen, onClose, papers }) => {
                 {selectedPaper.bibtex && (
                   <button
                     onClick={() => setIsBibtexOpen(true)}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 text-gray-400 rounded-md hover:text-[#aac2de] transition text-xs"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-gray-400 rounded-md hover:text-[#aac2de] transition text-sm"
                   >
                     <FaQuoteRight />
                   </button>
