@@ -194,7 +194,7 @@ export const LandingPage = () => {
         {/* Main content */}
       <div className="flex mt-[0px] w-full h-full">
         {/* Left sidebar */}
-        <div className={`relative ${isSidebarOpen ? "w-[300px]" : "w-[50px]"}`}>
+        <div className={`transition-all duration-300 ease-in-out relative ${isSidebarOpen ? "w-[300px]" : "w-[50px]"}`}>
           <Sidebar
             isSidebarOpen={isSidebarOpen}
             toggleSidebar={toggleSidebar}
