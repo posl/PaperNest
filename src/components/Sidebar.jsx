@@ -50,7 +50,7 @@ export const Sidebar = ({
           >
             <Checkbox
               id={option.id}
-              className="w-5 h-5 rounded border-gray-400 accent-indigo-600"
+              className="w-5 h-5 rounded border-gray-400 accent-sky-600"
               checked={selectedColumns.includes(option.id)}
               onCheckedChange={() => handleCheckboxChange(option.id)}
             />
@@ -62,7 +62,7 @@ export const Sidebar = ({
       {/* 適用ボタン */}
       <Button
         onClick={handleApplyFilters}
-        className="mt-8 w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition"
+        className="mt-8 w-full bg-sky-600 text-white font-semibold py-2 rounded-lg hover:bg-sky-700 transition"
       >
         反映させる
       </Button>

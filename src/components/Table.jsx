@@ -120,7 +120,7 @@ return (
 
                 <div className="flex justify-end mt-6">
                   <Button
-                    className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
+                    className="bg-sky-600 text-white px-6 py-2 rounded-lg hover:bg-sky-700 transition"
                     onClick={startEditing}
                   >
                     編集
@@ -145,7 +145,7 @@ return (
                   <TableHead
                     key={col.id}
                     onClick={() => handleSort(col.id)}
-                    className="px-4 py-3 text-left text-gray-700 font-semibold tracking-wide cursor-pointer select-none hover:text-indigo-300"
+                    className="px-4 py-3 text-left text-gray-700 font-semibold tracking-wide cursor-pointer select-none hover:text-sky-300"
                   >
                     {col.label}
                     {sortColumn === col.id && (
@@ -179,7 +179,7 @@ return (
         <div className="absolute top-0 right-0 w-[120px] z-10">
           {/* ヘッダー */}
           <div className="h-[56px] bg-[#f7faff] flex items-center justify-center font-semibold text-gray-700 border-l border-[#f7faff]">
-           pdf
+           
           </div>
 
           {/* 各行 */}
@@ -336,7 +336,7 @@ return (
 //                 </div>
 //                 <div className="absolute bottom-4 right-4 flex gap-4">
 //                   <Button
-//                     className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+//                     className="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700"
 //                     onClick={startEditing}
 //                   >
 //                     編集
@@ -357,7 +357,7 @@ return (
 //                 <TableHead
 //                   key={column.id}
 //                   onClick={() => handleSort(column.id)}
-//                   className="px-4 py-3 text-left text-gray-700 font-semibold tracking-wide cursor-pointer select-none hover:text-indigo-600"
+//                   className="px-4 py-3 text-left text-gray-700 font-semibold tracking-wide cursor-pointer select-none hover:text-sky-600"
 //                 >
 //                   {column.label}
 //                   {sortColumn === column.id && (

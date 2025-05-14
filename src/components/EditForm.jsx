@@ -93,7 +93,7 @@ export const EditForm = ({ editedData, handleInputChange, onSave, onCancel }) =>
           キャンセル
         </Button>
         <Button
-          className="bg-green-500 text-white px-4 py-2 rounded"
+          className="bg-cyan-700 text-white px-4 py-2 rounded"
           onClick={onSave}
         >
           保存

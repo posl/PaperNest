@@ -123,11 +123,11 @@ export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId
           alt="Logo"
           src="https://c.animaapp.com/f9osxd0I/img/image-4@2x.png"
         /> */}
-        <Icon icon="file-icons:tortoisesvn" className="text-4xl text-indigo-400" />
+        <Icon icon="file-icons:tortoisesvn" className="text-4xl text-cyan-500" />
         <Separator orientation="vertical" className="h-10 mx-4" />
         <div
           style={{ fontFamily: '"Abril Fatface", serif' }}
-          className="text-indigo-600 text-3xl font-semibold tracking-wide"
+          className="text-sky-600 text-3xl font-semibold tracking-wide"
         >
           PaperNest
         </div>
@@ -164,7 +164,7 @@ export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId
                 variant="ghost"
                 className={`text-sm px-4 py-2 rounded-md transition-colors ${
                   selectedTabId === tab.id
-                    ? "bg-indigo-100 text-indigo-700"
+                    ? "bg-sky-100 text-sky-700"
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
                 onClick={() => setSelectedTabId(tab.id)}
@@ -178,7 +178,7 @@ export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId
 
         {/* プラスボタン */}
         <Button
-          className="bg-indigo-600 text-white rounded-md p-2 hover:bg-indigo-700 transition"
+          className="bg-sky-600 text-white rounded-md p-2 hover:bg-sky-700 transition"
           onClick={handleAddTab}
         >
           <PlusIcon className="w-5 h-5" />
