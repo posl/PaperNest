@@ -36,12 +36,12 @@ export const LandingPage = () => {
 
       // Flat list of all papers with theme field
   const allPapers = [
-    { id: 1, title: "example1", author: "John Doe", year: "2021", theme: 1 , pdf: "https://example.com/paper1.pdf"},
-    { id: 2, title: "example2", author: "Jane Smith", year: "2020", theme: 1 , pdf: "https://example.com/paper2.pdf"},
-    { id: 3, title: "example3", author: "Author A", year: "2022", theme: 2, pdf: "https://example.com/paper3.pdf"},
-    { id: 4, title: "example4", author: "Author B", year: "2023", theme: 2, pdf: "https://example.com/paper4.pdf"},
-    { id: 5, title: "example5", author: "Writer X", year: "2018", theme: 3, pdf: "https://example.com/paper5.pdf"},
-    { id: 6, title: "example6", author: "Writer Y", year: "2057", theme: 3, pdf: "https://example.com/paper6.pdf"},
+    { id: 1, title: "example1", author: "John Doe", year: "2021", theme: 1 , pdf: "https://example.com/paper1.pdf", bibtex:"@article{example1, author = {John Doe}, title = {example1}, year = {2021}, journal = {Journal of Examples}, volume = {1}, number = {1}, pages = {1-10} }"},
+    { id: 2, title: "example2", author: "Jane Smith", year: "2020", theme: 1 , pdf: "https://example.com/paper2.pdf", bibtex:"@article{example2, author = {Jane Smith}, title = {example2}, year = {2020}, journal = {Journal of Examples}, volume = {1}, number = {1}, pages = {11-20} }"},
+    { id: 3, title: "example3", author: "Author A", year: "2022", theme: 2, pdf: "https://example.com/paper3.pdf", bibtex:"@article{example3, author = {Author A}, title = {example3}, year = {2022}, journal = {Journal of Examples}, volume = {1}, number = {1}, pages = {21-30} }"},
+    { id: 4, title: "example4", author: "Author B", year: "2023", theme: 2, pdf: "https://example.com/paper4.pdf", bibtex:"@article{example4, author = {Author B}, title = {example4}, year = {2023}, journal = {Journal of Examples}, volume = {1}, number = {1}, pages = {31-40} }"},
+    { id: 5, title: "example5", author: "Writer X", year: "2018", theme: 3, pdf: "https://example.com/paper5.pdf", bibtex:"@article{example5, author = {Writer X}, title = {example5}, year = {2018}, journal = {Journal of Examples}, volume = {1}, number = {1}, pages = {41-50} }"},
+    { id: 6, title: "example6", author: "Writer Y", year: "2057", theme: 3, pdf: "https://example.com/paper6.pdf", bibtex:"@article{example6, author = {Writer Y}, title = {example6}, year = {2057}, journal = {Journal of Examples}, volume = {1}, number = {1}, pages = {51-60} }"},
   ];
 
   const [tableData, setTableData] = useState(
