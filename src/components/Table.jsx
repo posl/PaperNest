@@ -70,46 +70,57 @@ return (
   <div className="max-w-screen-xl mx-auto px-6 py-6">
 
      {/* モーダル */}
-       {selectedRow && (
+     {selectedRow && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
           onClick={closeModal}
         >
           <div
-            className="bg-white p-6 rounded-lg shadow-lg w-[1300px] h-[900px] relative overflow-y-auto"
+            className="bg-white p-8 rounded-2xl shadow-2xl w-[1200px] max-h-[90vh] overflow-y-auto relative "
             onClick={(e) => e.stopPropagation()}
           >
+            {/* 閉じるボタン */}
             <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-4xl font-bold"
+              className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition"
               onClick={closeModal}
             >
               ×
             </button>
 
-            <h2 className="text-2xl font-semibold mb-6 text-gray-800">詳細情報</h2>
+            {/* タイトル */}
+            <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">論文詳細情報</h2>
 
+            {/* 内容 */}
             {isEditing ? (
+              <div className="bg-white rounded-2xl p-8 w-[1100px] h-[550px] flex flex-col overflow-hidden">
               <EditForm
                 editedData={editedData}
                 handleInputChange={handleInputChange}
                 onSave={saveChanges}
                 onCancel={() => setIsEditing(false)}
               />
+              </div>
             ) : (
-              <div className="space-y-4 text-gray-800">
-                <p><strong>Title:</strong> {selectedRow.title}</p>
-                <p><strong>Author:</strong> {selectedRow.author || "N/A"}</p>
-                <p><strong>Year:</strong> {selectedRow.year || "N/A"}</p>
-                <p><strong>Conference:</strong> {selectedRow.conference || "N/A"}</p>
-                <p><strong>Core-rank:</strong> {selectedRow["core-rank"] || "N/A"}</p>
-                <p><strong>Book:</strong> {selectedRow.book || "N/A"}</p>
-                <div>
-                  <p><strong>Abstract:</strong></p>
-                  <div className="text-base whitespace-pre-wrap">{selectedRow.abstract || "N/A"}</div>
+              <div className="space-y-4 text-gray-800 px-4">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                  <p><strong>Title:</strong> {selectedRow.title}</p>
+                  <p><strong>Author:</strong> {selectedRow.author || "N/A"}</p>
+                  <p><strong>Year:</strong> {selectedRow.year || "N/A"}</p>
+                  <p><strong>Conference:</strong> {selectedRow.conference || "N/A"}</p>
+                  <p><strong>Core-rank:</strong> {selectedRow["core-rank"] || "N/A"}</p>
+                  <p><strong>Book:</strong> {selectedRow.book || "N/A"}</p>
                 </div>
-                <div className="absolute bottom-4 right-4 flex gap-4">
+
+                <div className="mt-6">
+                  <p className="font-semibold text-lg mb-1">Abstract:</p>
+                  <div className="border p-4 rounded-lg bg-gray-50 text-base whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+                    {selectedRow.abstract || "N/A"}
+                  </div>
+                </div>
+
+                <div className="flex justify-end mt-6">
                   <Button
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-indigo-700"
+                    className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
                     onClick={startEditing}
                   >
                     編集
@@ -120,6 +131,7 @@ return (
           </div>
         </div>
       )}
+
 
     {/* テーブルとPDF列 */}
     <div className="relative flex rounded-lg shadow-md overflow-hidden bg-white">
