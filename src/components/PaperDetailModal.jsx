@@ -76,7 +76,7 @@ export const PaperDetailModal = ({
             {/* Abstract */}
             <div className="mt-6">
               <p className="font-semibold text-lg mb-1">Abstract:</p>
-              <div className="border p-4 rounded-lg bg-gray-50 text-base whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+              <div className="resize-y border p-4 rounded-lg bg-gray-50 text-base whitespace-pre-wrap max-h-[900px] overflow-y-auto">
                 {selectedRow.abstract || "N/A"}
               </div>
             </div>
@@ -90,7 +90,7 @@ export const PaperDetailModal = ({
                 <div className="relative">
                   <textarea
                     readOnly
-                    className="w-full p-4 border rounded-lg bg-gray-50 text-sm font-mono resize-none max-h-[200px] overflow-y-auto"
+                    className="resize-y w-full p-4 border rounded-lg bg-gray-50 text-sm font-mono resize-none max-h-[200px] overflow-y-auto"
                     value={selectedRow.bibtex}
                   />
                   <Button
