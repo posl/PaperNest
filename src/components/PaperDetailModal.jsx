@@ -90,7 +90,7 @@ export const PaperDetailModal = ({
                 <div className="relative">
                   <textarea
                     readOnly
-                    className="resize-y w-full p-4 border rounded-lg bg-gray-50 text-sm font-mono resize-none max-h-[200px] overflow-y-auto"
+                    className="resize-y w-full p-4 border rounded-lg bg-gray-50 text-sm font-mono max-h-[200px] overflow-y-auto"
                     value={selectedRow.bibtex}
                   />
                   <Button
