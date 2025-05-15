@@ -59,10 +59,10 @@ export const Sidebar = ({
         </button>
         
         {/* 全選択チェックボックス */}
-        <div className="flex justify-end items-center mb-2">
+        <div className="flex justify-end items-center mb-2 py-2">
           <button
             onClick={handleToggleAll}
-            className="text-sky-700 underline hover:text-sky-900 text-sm font-medium transition"
+            className="text-sky-700 underline hover:text-sky-900 text-xs font-medium transition"
           >
             {allChecked ? "全てを解除" : "全てを選択"}
           </button>

@@ -101,7 +101,7 @@ export const EditForm = ({ editedData, handleInputChange, onSave, onCancel, onDe
       {/* フッターボタン：常に画面下部に表示される */}
       <div className="border-t pt-4 pb-0 px-6 mb-0 flex justify-end gap-4 bg-white">
         <Button
-          className="bg-gray-500 text-white px-4 py-2 rounded"
+          className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition"
           onClick={onCancel}
         >
           キャンセル
@@ -113,7 +113,7 @@ export const EditForm = ({ editedData, handleInputChange, onSave, onCancel, onDe
           削除
         </Button>
         <Button
-          className="bg-cyan-700 text-white px-4 py-2 rounded"
+          className="bg-cyan-700 text-white px-4 py-2 rounded hover:bg-cyan-800 transition"
           onClick={onSave}
         >
           保存
