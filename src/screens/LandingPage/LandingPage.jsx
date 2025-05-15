@@ -226,6 +226,8 @@ export const LandingPage = () => {
               visibleColumns={visibleColumns}
               tableData={tableData}
               onUpdateRow={handleUpdateRow} // 編集内容を反映する関数を渡す
+              onDelete={tableData}
+              setTableData={setTableData}
             />
 
             <ScrollBar

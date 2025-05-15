@@ -99,7 +99,7 @@ export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId
 
   return (
     <>
-      <header className="w-full h-[118px] bg-[#b9e3ff3d] shadow-sm flex px-10 items-center">
+      <header className="w-full h-[118px] bg-[#EEF8FF] shadow-sm flex px-10 items-center">
         <div className="flex items-center">
           <Icon icon="file-icons:tortoisesvn" className="text-4xl text-cyan-500" />
           <Separator orientation="vertical" className="h-10 mx-4" />

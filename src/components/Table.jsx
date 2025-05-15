@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "../components/ui/button";
 import { FaFilePdf } from "react-icons/fa";
-import { EditForm } from "./EditForm";
 import { PaperDetailModal } from "./PaperDetailModal"; // ← モーダルコンポーネントをインポート
 
 import {
@@ -13,12 +12,16 @@ import {
   TableRow,
 } from "../components/ui/table";
 
-export const TableSection = ({ visibleColumns, tableData, onUpdateRow }) => {
+export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdateRow }) => {
   const [selectedRow, setSelectedRow] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({});
   const [sortColumn, setSortColumn] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  
+
 
   const closeModal = () => {
     setSelectedRow(null);
@@ -42,6 +45,11 @@ export const TableSection = ({ visibleColumns, tableData, onUpdateRow }) => {
     const { name, value } = e.target;
     setEditedData((prev) => ({ ...prev, [name]: value }));
   };
+  const handleDeleteRow = (id) => {
+    setTableData((prev) => prev.filter((row) => row.id !== id));
+    setSelectedRow(null); // モーダルを閉じる
+  };
+  
 
   const handleSort = (columnId) => {
     if (sortColumn === columnId) {
@@ -78,7 +86,13 @@ export const TableSection = ({ visibleColumns, tableData, onUpdateRow }) => {
         onSave={saveChanges}
         onCancelEdit={() => setIsEditing(false)}
         onInputChange={handleInputChange}
+        onDelete={() => handleDeleteRow(selectedRow.id)}
+        isDeleteModalOpen={isDeleteModalOpen} // ← ★追加
+        setIsDeleteModalOpen={setIsDeleteModalOpen} // ← ★追加
       />
+
+
+
 
       {/* テーブルとPDF列 */}
       <div className="relative flex rounded-lg shadow-md overflow-hidden bg-white">

@@ -4,6 +4,8 @@ import { EditForm } from "./EditForm";
 import { FaFilePdf } from "react-icons/fa";
 import { BibtexModal } from "./BibtexModal";
 import { FaQuoteRight } from "react-icons/fa";
+import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
+
 
 export const PaperDetailModal = ({
   selectedRow,
@@ -14,8 +16,12 @@ export const PaperDetailModal = ({
   onSave,
   onCancelEdit,
   onInputChange,
+  onDelete,
+  isDeleteModalOpen,
+  setIsDeleteModalOpen,
 }) => {
   const [isBibtexOpen, setIsBibtexOpen] = useState(false);
+  
 
   if (!selectedRow) return null;
 
@@ -57,7 +63,19 @@ export const PaperDetailModal = ({
               handleInputChange={onInputChange}
               onSave={onSave}
               onCancel={onCancelEdit}
+              onDelete={() => setIsDeleteModalOpen(true)}
             />
+            {isDeleteModalOpen && (
+                <ConfirmDeleteModal
+                isOpen={isDeleteModalOpen}
+                onCancel={() => setIsDeleteModalOpen(false)}
+                onConfirm={() => {
+                    onDelete(); // ← handleDeleteRow() を呼び出す
+                    setIsDeleteModalOpen(false);
+                }}
+                />
+            )}
+            
           </div>
         ) : (
           <div className="space-y-4 text-gray-800 px-4">
