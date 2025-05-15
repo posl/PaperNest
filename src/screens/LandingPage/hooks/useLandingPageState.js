@@ -51,13 +51,19 @@ export const useLandingPageState = (columns) => {
   //       );
   //   }
 
-      const handleCheckboxChange = (id) => {
+    const handleCheckboxChange = (id) => {
+      if (id === "ALL_ON") {
+        setSelectedColumns(columns.map(col => col.id));
+      } else if (id === "ALL_OFF") {
+        setSelectedColumns([]);
+      } else {
         setSelectedColumns((prev) =>
           prev.includes(id)
-             ? prev.filter((column) => column !== id)
+            ? prev.filter((column) => column !== id)
             : [...prev, id]
-         );
+        );
       }
+    };
 
     // 表示する列の状態
     const [visibleColumns, setVisibleColumns] = useState(columns); // 初期は全表示

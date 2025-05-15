@@ -11,6 +11,22 @@ export const Sidebar = ({
   handleCheckboxChange,
   handleApplyFilters,
 }) => {
+  // 全チェックされてるかどうかを判定
+  const allChecked = filterOptions.every((option) =>
+    selectedColumns.includes(option.id)
+  );
+
+  // 切り替え関数
+  const handleToggleAll = () => {
+    if (allChecked) {
+      // 全部外す
+      handleCheckboxChange("ALL_OFF");
+    } else {
+      // 全部選ぶ
+      handleCheckboxChange("ALL_ON");
+    }
+  };
+
   return (
     <>
       {/* 開くボタン（サイドバーが非表示時） */}
@@ -41,6 +57,16 @@ export const Sidebar = ({
             color="#000"
           />
         </button>
+        
+        {/* 全選択チェックボックス */}
+        <div className="flex justify-end items-center mb-2">
+          <button
+            onClick={handleToggleAll}
+            className="text-sky-700 underline hover:text-sky-900 text-sm font-medium transition"
+          >
+            {allChecked ? "全てを解除" : "全てを選択"}
+          </button>
+        </div>
 
         {/* チェックボックスリスト */}
         <div className="space-y-4 mt-4">

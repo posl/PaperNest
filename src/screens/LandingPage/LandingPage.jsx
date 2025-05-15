@@ -183,6 +183,8 @@ export const LandingPage = () => {
     return [1, 2, 3, 4, 5];
   };
 
+  
+
   return (
     <div className="bg-white flex flex-row justify-center w-full"
          onDragOver={handleDragOver} // 画面全体でドラッグを検知
