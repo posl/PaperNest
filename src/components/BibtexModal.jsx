@@ -23,7 +23,7 @@ export const BibtexModal = ({ bibtex, onClose }) => {
 
         <textarea
           readOnly
-          className="w-full h-[300px] p-4 border border-gray-300 rounded-md bg-gray-50 font-mono text-sm resize-none"
+          className="w-full h-[300px] p-4 border border-gray-300 rounded-md bg-gray-50 font-mono text-sm resize-none focus:outline-none"
           value={bibtex}
         />
 
