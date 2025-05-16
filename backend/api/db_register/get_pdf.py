@@ -1,40 +1,34 @@
 import os
 import uuid
-from io import BytesIO
-from pathlib import Path
 from typing import Dict
 
 import uvicorn
 from dotenv import load_dotenv
-<<<<<<< HEAD:backend/api/get_pdf.py
-from fastapi import File, Form, HTTPException, UploadFile
-=======
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
->>>>>>> origin/main:backend/db_register/get_pdf.py
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
+from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_groq import ChatGroq
-from main import APP, BASE_URL
 from pypdf import PdfReader
+
+from backend.api.db_register.db_register import register_paper
+from backend.api.db_register.metadata_fetcher import fetch_metadata
+from backend.config import BASE_URL, UPLOAD_DIR, VECTOR_STORE_DIR
 from backend.schema.schema import UploadPDFResponseSchema
-from backend.db_register.metadata_fetcher import fetch_metadata
-from backend.db_register.db_register import register_paper
 
 router = APIRouter()  # インスタンス作成
-TOP_DIR = Path(__file__).resolve().parent
-UPLOAD_DIR = TOP_DIR / "upload"  # PDFを一時的に保存するディレクトリ
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
 
 memory_storage: Dict[str, bytes] = {}  # PDFの保存場所
 
-# Get Groq API key
+# GroqのAPI keyを取得
 load_dotenv()
 groq_api_key = os.environ["GROQ_API_KEY"]
 groq_chat = ChatGroq(
@@ -43,7 +37,6 @@ groq_chat = ChatGroq(
 )
 
 system_prompt = "You are a helpful assistant. Please respond based on the content of the paper PDF.\n\n{context}"
-
 prompt = ChatPromptTemplate.from_messages(
     [
         ("system", system_prompt),
@@ -52,10 +45,32 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 
+# ベクトルデータベースをロード
+def load_vector_store() -> FAISS:
+    embedding = HuggingFaceEmbeddings(
+        model_name="oshizo/sbert-jsnli-luke-japanese-base-lite"
+    )
+    if os.path.exists(VECTOR_STORE_DIR):
+        vector_store = FAISS.load_local(
+            VECTOR_STORE_DIR,
+            embedding,
+            allow_dangerous_deserialization=True,
+        )
+    else:
+        # vector_store = FAISS(
+        #     [],
+        #     embedding,
+        # )
+        documents = [Document(page_content="", metadata={"source": ""})]
+        vector_store = FAISS.from_documents(documents, embedding)
+
+    return vector_store
+
+
 # PDFファイルからテキストを抽出
 def read_text_from_pdf(pdf_path):
     reader = PdfReader(pdf_path)
-    print(reader.pages[0].extract_text())
+    # print(reader.pages[0].extract_text())
     text = ""
     for page_num in range(len(reader.pages)):
         page = reader.pages[page_num]
@@ -76,11 +91,16 @@ def split_pdf_text(pdf_text: str) -> list:
 
 
 # テキストを埋め込みベクトルに変換
-def embedding_text(splited_text: list) -> FAISS:
+def embedding_text(splited_text: list, pdf_id: str) -> FAISS:
     embeddings = HuggingFaceEmbeddings(
         model_name="oshizo/sbert-jsnli-luke-japanese-base-lite"
     )
-    index = FAISS.from_texts(splited_text, embedding=embeddings)
+    # metadataにPDFのURLを追加
+    documents = [
+        Document(page_content=text, metadata={"source": pdf_id})
+        for text in splited_text
+    ]
+    index = FAISS.from_documents(documents, embedding=embeddings)
     return index
 
 
@@ -118,12 +138,10 @@ def read_root():
     return {"message": "Hello, FastAPI is running!"}
 
 
-# get_pdf.py
-
-
-def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
+def analyze_pdf_from_bytes(pdf_bytes: bytes, category: str) -> Dict[str, str]:
+    # PDFを保存
     pdf_id = str(uuid.uuid4())
-    pdf_url = f"{base_url}/pdf/{pdf_id}.pdf"
+    pdf_url = f"{BASE_URL}/uploaded/{pdf_id}.pdf"
     memory_storage[pdf_id] = pdf_bytes
 
     copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
@@ -132,7 +150,7 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
 
     pdf_text = read_text_from_pdf(str(copy_pdf_path))
     splited_txt = split_pdf_text(pdf_text)
-    index = embedding_text(splited_txt)
+    index = embedding_text(splited_txt, pdf_id)
     retriever = get_retriever(index)
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
     title = generate_title(rag_chain).replace("Title: ", "")
@@ -154,9 +172,16 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
 
     summary = generate_summary(rag_chain).replace("Summary: ", "")
 
-    os.remove(copy_pdf_path)
+    # ベクトルデータベースに論文内容を追加
+    vector_store = load_vector_store()
+    vector_store.merge_from(index)
 
-    return {"pdf_url": pdf_url, "title": title, "summary": summary}
+    print(f"Vector Store ID: {index.docstore._dict.metadata}")
+
+    # ベクトルデータベースを保存
+    vector_store.save_local(VECTOR_STORE_DIR)
+
+    return {"pdf_id": pdf_id, "pdf_url": pdf_url, "title": title, "summary": summary}
 
 
 # PDFをアップロード
@@ -166,12 +191,15 @@ async def upload_pdf(
     file: UploadFile = File(...),
     category: str = Form(None),
 ):
+    # PDFのバリデーション
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
     pdf_bytes = await file.read()
-    pdf_info = analyze_pdf_from_bytes(pdf_bytes)
-    print(pdf_info)
+    # PDFのタイトルと要約を取得
+    pdf_info = analyze_pdf_from_bytes(pdf_bytes, category)
+    # print(pdf_info)
     title = pdf_info["title"]
+
     if title is not None:
         metadata = fetch_metadata(title)
     else:
@@ -187,12 +215,12 @@ async def upload_pdf(
     metadata.update(pdf_info)
     metadata["category"] = category
     suc_or_fai = "failure"
-    suc_or_fai = register_paper(metadata)
+    suc_or_fai = register_paper(metadata, pdf_info["pdf_id"])
     if suc_or_fai == "failure":
         response = UploadPDFResponseSchema(
             success=False,
             message="登録中にエラーが発生しました．",
-            pdf_url=pdf_info["pdf_url"]
+            pdf_url=pdf_info["pdf_url"],
         )
     elif suc_or_fai == "success":
         # 個別の項目が取得できているかチェック
@@ -218,13 +246,13 @@ async def upload_pdf(
             response = UploadPDFResponseSchema(
                 success=False,
                 message=f"{failed_info} の取得に失敗しました。",
-                pdf_url=pdf_info["pdf_url"]
+                pdf_url=pdf_info["pdf_url"],
             )
         else:
             response = UploadPDFResponseSchema(
                 success=True,
                 message="PDFの登録が完了しました。",
-                pdf_url=pdf_info["pdf_url"]
+                pdf_url=pdf_info["pdf_url"],
             )
 
     print(response)
@@ -232,23 +260,30 @@ async def upload_pdf(
 
 
 # PDFを開く
-@router.get("/pdf/{pdf_id}.pdf")
+@router.get("/uploaded/{pdf_id}.pdf")
 async def get_pdf(pdf_id: str):
-    pdf_bytes = memory_storage.get(pdf_id)
-    # PDFが存在しない場合はエラーを返す
-    if pdf_bytes is None:
+    # pdf_bytes = memory_storage.get(pdf_id)
+    # # PDFが存在しない場合はエラーを返す
+    # if pdf_bytes is None:
+    #     raise HTTPException(status_code=404, detail="PDF not found.")
+    # # PDFを返す
+    # return StreamingResponse(
+    #     content=BytesIO(pdf_bytes),
+    #     media_type="application/pdf",
+    #     headers={"Content-Disposition": f"inline; filename={pdf_id}.pdf"},
+    # )
+    pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
+
+    if not pdf_path.exists():
         raise HTTPException(status_code=404, detail="PDF not found.")
-    # PDFを返す
-    return StreamingResponse(
-        content=BytesIO(pdf_bytes),
+
+    return FileResponse(
+        path=pdf_path,
         media_type="application/pdf",
+        filename=f"{pdf_id}.pdf",
         headers={"Content-Disposition": f"inline; filename={pdf_id}.pdf"},
     )
 
 
 if __name__ == "__main__":
-<<<<<<< HEAD:backend/api/get_pdf.py
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-=======
     uvicorn.run(router, host="0.0.0.0", port=8000)
->>>>>>> origin/main:backend/db_register/get_pdf.py

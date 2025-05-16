@@ -7,11 +7,11 @@ from backend.models.models import Paper
 # 初回のみテーブル作成
 Base.metadata.create_all(bind=engine)
 
-def register_paper(metadata: dict) -> str:
+def register_paper(metadata: dict, pdf_id: str) -> str:
     db: Session = SessionLocal()
 
     try:
-        paper_id = str(uuid.uuid4())
+        paper_id = pdf_id
 
         paper = Paper(
             paper_id=paper_id,

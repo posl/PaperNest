@@ -41,3 +41,6 @@ notebooks/
 
 # database
 papers.db
+faiss_index/
+upload/
+pdf/

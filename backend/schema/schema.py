@@ -34,3 +34,14 @@ class PDFQuestionRequestSchema(BaseModel):
 # 質問応答用スキーマ
 class PDFQuestionResponseSchema(BaseModel):
     message: str
+
+# ベクトル検索の質問受け付け用スキーマ
+class VectorSearchRequestSchema(BaseModel):
+    question: str
+    lang: str = Field(description="ユーザが使用した言語(ja または en)")
+
+# ベクトル検索の応答用スキーマ
+class VectorSearchResponseSchema(BaseModel):
+    paper_id: str
+    pdf_url: str
+    similarity: float = Field(description="類似度スコア")
