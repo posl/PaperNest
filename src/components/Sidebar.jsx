@@ -74,7 +74,7 @@ export const Sidebar = ({
             <label
               key={option.id}
               htmlFor={option.id}
-              className="flex items-center space-x-3 text-gray-800 font-medium text-base"
+              className="flex items-center space-x-3 text-gray-800 hover:text-gray-400 font-medium text-base"
             >
               <Checkbox
                 id={option.id}
@@ -89,8 +89,14 @@ export const Sidebar = ({
 
         {/* 適用ボタン */}
         <Button
-          onClick={handleApplyFilters}
-          className="mt-8 w-full bg-sky-600 text-white font-semibold py-2 rounded-lg hover:bg-sky-700 transition"
+          onClick={() => {
+            if (selectedColumns.length === 0) {
+              alert("最低1つは選択してください");
+              return;
+            }
+            handleApplyFilters();
+          }}
+          className="mt-8 w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold py-2 rounded-lg shadow-md hover:brightness-110 hover:scale-[1.02] transition-all"
         >
           反映させる
         </Button>

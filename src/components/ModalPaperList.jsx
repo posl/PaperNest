@@ -81,7 +81,7 @@ export const ModalPaperList = ({ isOpen, onClose, papers }) => {
                     href={selectedPaper.pdf}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#aac2de] text-white rounded-md hover:bg-[#90b4d4] transition text-sm"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#aac2de] text-white rounded-md text-sm hover:bg-[#90b4d4] hover:scale-105 hover:brightness-105 transition-all"
                   >
                     <FaFilePdf />
                     PDF

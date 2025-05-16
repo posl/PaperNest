@@ -20,7 +20,7 @@ export const FloatingUploadButton = ({ isPdfOpen, setIsPdfOpen, isDragging }) =>
       <Button
         className={`absolute bottom-[49px] right-[30px] w-[81px] h-[81px] rounded-full flex items-center justify-center shadow-xl transition-all duration-200 ease-out ${
           isDragging
-            ? "bg-gradient-to-br from-red-300 to-red-500"
+            ? "bg-gradient-to-br from-sky-300 to-sky-500 brightness-110"
             : "bg-gradient-to-br from-sky-300 to-blue-500 hover:scale-105 hover:brightness-110"
         }`}
         onClick={() => setIsPdfOpen(!isPdfOpen)}

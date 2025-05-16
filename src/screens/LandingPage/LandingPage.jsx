@@ -231,6 +231,7 @@ export const LandingPage = () => {
               onDelete={tableData}
               setTableData={setTableData}
             />
+            
 
             <ScrollBar
               orientation="vertical"
@@ -242,8 +243,14 @@ export const LandingPage = () => {
         </div>
 
         {/* Question input */}
-        <div className="absolute bottom-[50px] left-1/2 transform -translate-x-1/2 w-[999px]">
-          <QuestionInput onSubmit={handleQuestionSubmit}/>
+        <div className="fixed bottom-[40px] left-[300px] right-[100px] px-4 z-30 pointer-events-none transition-[left] duration-300 ease-in-out"
+          style={{
+            left: isSidebarOpen ? "300px" : "50px", // ← ← ← ← ここだけが鍵！
+          }}
+        >
+          <div className="w-full max-w-6xl mx-auto pointer-events-auto px-6">
+            <QuestionInput onSubmit={handleQuestionSubmit} />
+          </div>
         </div>
         {/* Modal for related papers */}
         <ModalPaperList

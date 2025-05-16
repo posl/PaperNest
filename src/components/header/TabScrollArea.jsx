@@ -100,7 +100,7 @@ export const TabScrollArea = ({
       )}
 
       <Button
-        className="ml-4 bg-sky-600 text-white rounded-md p-2 hover:bg-sky-700 transition shrink-0"
+        className="ml-4 bg-gradient-to-tr from-sky-400 to-blue-500 w-[32px] h-[32px] rounded-md text-white shadow-sm will-change-transform hover:scale-110 transform-gpu transition"
         onClick={handleAddTab}
       >
         <PlusIcon className="w-5 h-5" />

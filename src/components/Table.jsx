@@ -143,25 +143,26 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
               {/* 空ヘッダー */}
             </div>
 
-            {/* 各行のPDFボタン */}
-            {sortedData.map((row) => (
-              <div
-                key={row.id}
-                className="h-[56px] flex items-center justify-center border-t bg-white"
-                onClick={(e) => e.stopPropagation()}
+          {/* 各行のPDFボタン */}
+          {sortedData.map((row) => (
+            <div
+              key={row.id}
+              className="h-[56px] flex items-center justify-center border-t bg-white"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Button
+                className="bg-[#aac2de] text-white px-3 py-2 rounded-md text-sm shadow-md hover:bg-[#90b4d4] will-change-transform hover:scale-105 transform-gpu hover:brightness-105 transition-all"
+                onClick={() => {
+                  if (row.pdf) window.open(row.pdf, "_blank");
+                  else alert("PDFのURLが設定されていません");
+                }}
               >
-                <Button
-                  className="bg-[#aac2de] text-white px-3 py-2 rounded-md text-sm hover:bg-[#90b4d4] transition"
-                  onClick={() => {
-                    if (row.pdf) window.open(row.pdf, "_blank");
-                    else alert("PDFのURLが設定されていません");
-                  }}
-                >
-                  <FaFilePdf className="text-white mr-1" />
-                  PDF
-                </Button>
-              </div>
-            ))}
+                <FaFilePdf className="text-white mr-1" />
+                PDF
+              </Button>
+            </div>
+          ))}
+
           </div>
         </div>
       </div>

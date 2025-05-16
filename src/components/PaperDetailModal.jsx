@@ -102,7 +102,7 @@ export const PaperDetailModal = ({
             {!isEditing && (
             <button
                 onClick={onStartEdit}
-                className="inline-flex px-3 py-2 text-sky-700 rounded-md hover:bg-gray-100 hover:text-sky-900 transition font-semibold"
+                className="inline-flex px-3 py-2 text-sky-700 rounded-md hover:bg-gray-100 will-change-transform hover:shadow-md hover:scale-105 transition-transform hover:text-sky-900 font-semibold"
             >
                 Edit
             </button>
@@ -116,12 +116,12 @@ export const PaperDetailModal = ({
               </Button> */}
               <button
                 onClick={() => setIsBibtexOpen(true)}
-                className="gap-2 px-3 py-2 text-gray-500 rounded-full hover:text-gray-600 hover:bg-gray-100 transition"
+                className="gap-2 px-3 py-2 text-gray-500 rounded-full hover:text-gray-600 hover:shadow-md will-change-transform hover:scale-105 transition-transform hover:bg-gray-100"
                 >
                 <FaQuoteRight />
                 </button>
               <Button
-                className="bg-[#aac2de] text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-[#90b4d4] transition"
+                className="bg-[#aac2de] text-white px-3 py-2 rounded-md text-sm shadow-md hover:bg-[#90b4d4] will-change-transform hover:scale-105 hover:brightness-105 transition-all"
                 onClick={openPdf}
               >
                 <FaFilePdf />
