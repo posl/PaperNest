@@ -26,17 +26,19 @@ async def vector_search(query: VectorSearchRequestSchema):
     db = SessionLocal()
 
     # 質問と類似している論文を，5件返す
-    results = vector_store.similarity_search_with_score(question, 3)
+    # 違うPDFのチャンクが欲しい．
+    results = vector_store.similarity_search_with_score(question, 6)
     response = []
     for res, score in results:
         paper_id = res.metadata["source"]
+        chunk_text = res.page_content
         # paper_idが一致する論文を取得
         paper = db.query(Paper).filter(Paper.paper_id == paper_id).first()
         if paper:
             print(f"Paper ID: {paper.paper_id}, PDF URL: {paper.pdf_url}, Similarity: {score}")
             response.append(
                 VectorSearchResponseSchema(
-                    paper_id=paper.paper_id, pdf_url=paper.pdf_url, similarity=score
+                    paper_id=paper.paper_id, pdf_url=paper.pdf_url, similarity=score, chunk_text=chunk_text
                 )
             )
         else:

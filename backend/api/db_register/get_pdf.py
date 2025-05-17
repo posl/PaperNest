@@ -176,8 +176,6 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes, category: str) -> Dict[str, str]:
     vector_store = load_vector_store()
     vector_store.merge_from(index)
 
-    print(f"Vector Store ID: {index.docstore._dict.metadata}")
-
     # ベクトルデータベースを保存
     vector_store.save_local(VECTOR_STORE_DIR)
 

@@ -45,3 +45,4 @@ class VectorSearchResponseSchema(BaseModel):
     paper_id: str
     pdf_url: str
     similarity: float = Field(description="類似度スコア")
+    chunk_text: str
