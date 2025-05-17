@@ -32,6 +32,12 @@ source .venv/bin/activate
 uvicorn backend.main:app --reload
 ```
 
+### Step4: Swagger APIを起動
+- 以下のURLにアクセスすると，Swagger APIでAPIのテストを実行できます．
+```
+http://127.0.0.1:8000/docs
+```
+
 ## 論文の登録
 - サーバーを起動したターミナルとは別のターミナルで以下を実行してください．
 ```bash
@@ -46,3 +52,10 @@ curl -X POST "http://127.0.0.1:8000/upload" -F "file=@/absolute/path/to/your/pdf
 curl http://127.0.0.1:8000/get_all_papers
 ```
 - 全ての論文の全てのメタデータが返ってきます．
+
+## 質問と類似した論文の検索
+- サーバーを起動したターミナルとは別のターミナルで以下を実行してください．(以下は英語での質問)
+```bash
+curl -X POST "http://127.0.0.1:8000/search" -H "Content-Type: application/json" -d '{"question": "(Please input your query)", "lang": "en"}'
+```
+- 質問と類似した論文のPAPER_ID，URLが返ってきます．
