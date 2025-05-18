@@ -24,7 +24,7 @@ from sqlalchemy.orm import Session
 from backend.api.db_register.db_register import register_paper
 from backend.api.db_register.metadata_fetcher import fetch_metadata
 from backend.models.models import Paper
-from backend.database.database import SessionLocal, engine, Base
+from backend.database.database import get_db, engine, Base
 from backend.config import BASE_URL, UPLOAD_DIR, VECTOR_STORE_DIR
 from backend.schema.schema import UploadPDFResponseSchema, PaperSchema
 
@@ -155,14 +155,6 @@ def calculate_first_page_hash(pdf_bytes: bytes) -> str:
     hash_value = hashlib.sha256(text.encode('utf-8')).hexdigest()
     return hash_value
 
-# DBセッション依存性
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
     # PDFを保存
     pdf_id = str(uuid.uuid4())
@@ -209,7 +201,7 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
 
 # PDFをアップロード
 # FastAPIのエンドポイント
-@router.post("/upload")
+@router.post("/upload", response_model=UploadPDFResponseSchema)
 async def upload_pdf(
     file: UploadFile = File(...),
     category: str = Form(None),
@@ -313,9 +305,9 @@ async def upload_pdf(
 
 
 # PDFを開く
-@router.get("/uploaded/{pdf_id}.pdf")
-async def get_pdf(pdf_id: str):
-    # pdf_bytes = memory_storage.get(pdf_id)
+@router.get("/uploaded/{paper_id}.pdf")
+async def get_pdf(paper_id: str):
+    # pdf_bytes = memory_storage.get(paper_id)
     # # PDFが存在しない場合はエラーを返す
     # if pdf_bytes is None:
     #     raise HTTPException(status_code=404, detail="PDF not found.")
@@ -323,9 +315,9 @@ async def get_pdf(pdf_id: str):
     # return StreamingResponse(
     #     content=BytesIO(pdf_bytes),
     #     media_type="application/pdf",
-    #     headers={"Content-Disposition": f"inline; filename={pdf_id}.pdf"},
+    #     headers={"Content-Disposition": f"inline; filename={paper_id}.pdf"},
     # )
-    pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
+    pdf_path = UPLOAD_DIR / f"{paper_id}.pdf"
 
     if not pdf_path.exists():
         raise HTTPException(status_code=404, detail="PDF not found.")
@@ -333,8 +325,8 @@ async def get_pdf(pdf_id: str):
     return FileResponse(
         path=pdf_path,
         media_type="application/pdf",
-        filename=f"{pdf_id}.pdf",
-        headers={"Content-Disposition": f"inline; filename={pdf_id}.pdf"},
+        filename=f"{paper_id}.pdf",
+        headers={"Content-Disposition": f"inline; filename={paper_id}.pdf"},
     )
 
 
