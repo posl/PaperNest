@@ -1,20 +1,14 @@
-import uuid
 from sqlalchemy.orm import Session
-from backend.database.database import SessionLocal, engine, Base
+from backend.database.database import SessionLocal
 from backend.models.models import Paper
 # from metadata_fetcher import fetch_metadata
 
-# 初回のみテーブル作成
-Base.metadata.create_all(bind=engine)
-
-def register_paper(metadata: dict, pdf_id: str) -> str:
+def register_paper(metadata: dict) -> str:
     db: Session = SessionLocal()
 
     try:
-        paper_id = pdf_id
-
         paper = Paper(
-            paper_id=paper_id,
+            paper_id=metadata.get("pdf_id"),
             title=metadata.get("title"),
             authors=metadata.get("authors"),
             year=metadata.get("year"),
@@ -24,7 +18,8 @@ def register_paper(metadata: dict, pdf_id: str) -> str:
             core_rank=metadata.get("core_rank"),
             pdf_url=metadata.get("pdf_url"),
             category=metadata.get("category"),
-            summary=metadata.get("summary")
+            summary=metadata.get("summary"),
+            hash=metadata.get("hash"),
         )
 
         db.add(paper)

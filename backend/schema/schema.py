@@ -23,7 +23,7 @@ class PaperSchema(BaseModel):
 class UploadPDFResponseSchema(BaseModel):
     success: bool
     message: str
-    pdf_url: str  # 保存されたPDFのURL
+    data: dict
 
 # 質問受け付け用スキーマ
 class PDFQuestionRequestSchema(BaseModel):
