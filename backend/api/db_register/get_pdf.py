@@ -2,7 +2,6 @@ import os
 import uuid
 from typing import Dict
 
-import uvicorn
 from dotenv import load_dotenv
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
@@ -19,6 +18,7 @@ from langchain_groq import ChatGroq
 from pypdf import PdfReader
 
 from backend.api.db_register.db_register import register_paper
+from backend.api.db_register.get_pdf_title import get_pdf_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
 from backend.config import BASE_URL, UPLOAD_DIR, VECTOR_STORE_DIR
 from backend.schema.schema import UploadPDFResponseSchema
@@ -57,10 +57,6 @@ def load_vector_store() -> FAISS:
             allow_dangerous_deserialization=True,
         )
     else:
-        # vector_store = FAISS(
-        #     [],
-        #     embedding,
-        # )
         documents = [Document(page_content="", metadata={"source": ""})]
         vector_store = FAISS.from_documents(documents, embedding)
 
@@ -92,9 +88,10 @@ def split_pdf_text(pdf_text: str) -> list:
 
 # テキストを埋め込みベクトルに変換
 def embedding_text(splited_text: list, pdf_id: str) -> FAISS:
-    embeddings = HuggingFaceEmbeddings(
-        model_name="oshizo/sbert-jsnli-luke-japanese-base-lite"
-    )
+    # embeddings = HuggingFaceEmbeddings(
+    #     model_name="oshizo/sbert-jsnli-luke-japanese-base-lite"
+    # )
+    embeddings = HuggingFaceEmbeddings()
     # metadataにPDFのURLを追加
     documents = [
         Document(page_content=text, metadata={"source": pdf_id})
@@ -121,14 +118,14 @@ def create_rag_chain(
 
 # 論文のタイトルを生成
 def generate_title(rag_chain: RunnableBinding) -> str:
-    user_input = "PDFの1ページ目から，論文のタイトルを取得してください．出力形式は，以下です．\nTitle: {title}"
+    user_input = "Get the title of the paper from the first page of the PDF. The output format is as follows.\nTitle: {title}"
     response = rag_chain.invoke({"input": user_input})
     return response["answer"]
 
 
 # 論文の要約を生成
 def generate_summary(rag_chain: RunnableBinding) -> str:
-    user_input = "PDFの全ページを読んで，論文を要約してください．出力形式は，以下です．\nSummary: {summary}"
+    user_input = "Read all pages of the PDF and summarize the paper. The output format is as follows.\nSummary: {summary}"
     response = rag_chain.invoke({"input": user_input})
     return response["answer"]
 
@@ -153,7 +150,10 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes, category: str) -> Dict[str, str]:
     index = embedding_text(splited_txt, pdf_id)
     retriever = get_retriever(index)
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
-    title = generate_title(rag_chain).replace("Title: ", "")
+
+    # タイトルを生成
+    # title = generate_title(rag_chain).replace("Title: ", "")
+    title = get_pdf_title(str(copy_pdf_path))
     if any(
         phrase in title.lower() for phrase in ["unable to extract", "unable to find"]
     ):
@@ -169,7 +169,7 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes, category: str) -> Dict[str, str]:
                 ].strip()
             else:
                 title = None  # 適切な提案がなかった場合は None にする
-
+    # 要約を生成
     summary = generate_summary(rag_chain).replace("Summary: ", "")
 
     # ベクトルデータベースに論文内容を追加
@@ -260,16 +260,6 @@ async def upload_pdf(
 # PDFを開く
 @router.get("/uploaded/{pdf_id}.pdf")
 async def get_pdf(pdf_id: str):
-    # pdf_bytes = memory_storage.get(pdf_id)
-    # # PDFが存在しない場合はエラーを返す
-    # if pdf_bytes is None:
-    #     raise HTTPException(status_code=404, detail="PDF not found.")
-    # # PDFを返す
-    # return StreamingResponse(
-    #     content=BytesIO(pdf_bytes),
-    #     media_type="application/pdf",
-    #     headers={"Content-Disposition": f"inline; filename={pdf_id}.pdf"},
-    # )
     pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
 
     if not pdf_path.exists():
@@ -281,7 +271,3 @@ async def get_pdf(pdf_id: str):
         filename=f"{pdf_id}.pdf",
         headers={"Content-Disposition": f"inline; filename={pdf_id}.pdf"},
     )
-
-
-if __name__ == "__main__":
-    uvicorn.run(router, host="0.0.0.0", port=8000)

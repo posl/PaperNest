@@ -6,7 +6,6 @@ from backend.api.vector_search.vector_search import router as vector_search_rout
 
 app = FastAPI()
 
-
 app.include_router(get_pdf_router)
 app.include_router(get_all_papers_router)
 app.include_router(vector_search_router)

@@ -47,7 +47,3 @@ async def vector_search(query: VectorSearchRequestSchema):
     db.close()
 
     return response
-
-
-# if __name__ == "__main__":
-#     uvicorn.run(router, host="0.0.0.0", port=8000)

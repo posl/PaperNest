@@ -1,11 +1,13 @@
-import uuid
 from sqlalchemy.orm import Session
-from backend.database.database import SessionLocal, engine, Base
+
+from backend.database.database import Base, SessionLocal, engine
 from backend.models.models import Paper
+
 # from metadata_fetcher import fetch_metadata
 
 # 初回のみテーブル作成
 Base.metadata.create_all(bind=engine)
+
 
 def register_paper(metadata: dict, pdf_id: str) -> str:
     db: Session = SessionLocal()
@@ -24,7 +26,7 @@ def register_paper(metadata: dict, pdf_id: str) -> str:
             core_rank=metadata.get("core_rank"),
             pdf_url=metadata.get("pdf_url"),
             category=metadata.get("category"),
-            summary=metadata.get("summary")
+            summary=metadata.get("summary"),
         )
 
         db.add(paper)
@@ -39,6 +41,7 @@ def register_paper(metadata: dict, pdf_id: str) -> str:
 
     finally:
         db.close()
+
 
 # if __name__ == "__main__":
 #     title = "Using Gameplay Videos for Detecting Issues in Video Games"
