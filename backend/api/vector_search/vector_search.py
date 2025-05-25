@@ -1,7 +1,13 @@
+import os
+
+from dotenv import load_dotenv
 from fastapi import APIRouter
+from langchain.indexes.vectorstore import VectorStoreIndexWrapper
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
+from langchain_groq import ChatGroq
 
+from backend.config import EMBEDDINGS_MODEL, VECTOR_STORE_DIR
 from backend.database.database import SessionLocal
 from backend.models.models import Paper
 from backend.schema.schema import (
@@ -9,41 +15,77 @@ from backend.schema.schema import (
     VectorSearchResponseSchema,
 )
 
-from backend.config import VECTOR_STORE_DIR
-
 router = APIRouter()  # インスタンス作成
+
+load_dotenv()
+groq_api_key = os.environ["GROQ_API_KEY"]
+llm = ChatGroq(
+    groq_api_key=groq_api_key,
+    model_name="llama3-70b-8192",
+)
+
+embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
+vector_store = FAISS.load_local(
+    VECTOR_STORE_DIR,
+    embeddings,
+    allow_dangerous_deserialization=True,
+)
+
+
+def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int):
+    vectorstoreindex = VectorStoreIndexWrapper(vectorstore=vectorstore)
+    answer = vectorstoreindex.query(query, llm)
+    print(f"Answer: {answer}")
+
+    results = []
+    paper_ids = set()
+    db = SessionLocal()
+    for sentence in answer.split("\n"):
+        if len(results) >= k:
+            break
+        for res, score in vectorstore.similarity_search_with_score(sentence, k=k):
+            if len(results) >= k:
+                break
+            paper_id = res.metadata["source"]
+            # paper_idが重複しないようにする
+            if paper_id in paper_ids:
+                continue
+            paper_ids.add(paper_id)
+            paper = db.query(Paper).filter(Paper.paper_id == paper_id).first()
+            if paper:
+                results.append(
+                    VectorSearchResponseSchema(
+                        paper_id=paper.paper_id,
+                        title=paper.title,
+                        authors=paper.authors,
+                        year=paper.year,
+                        conference=paper.conference,
+                        bibtex=paper.bibtex,
+                        citations=paper.citations,
+                        core_rank=paper.core_rank,
+                        pdf_url=paper.pdf_url,
+                        category=paper.category,
+                        summary=paper.summary,
+                        llm_answer=answer,
+                        similarity=score,
+                        chunk_text=res.page_content,
+                    )
+                )
+            else:
+                print(f"Paper with ID {paper_id} not found in the database.")
+
+    db.close()
+    return results
+    # return {"answer": answer, "results": results}
 
 
 # PDF検索質問を受け取り，類似したPDFを返す
 @router.post("/search", response_model=list[VectorSearchResponseSchema])
 async def vector_search(query: VectorSearchRequestSchema):
     question = query.question
-    vector_store = FAISS.load_local(
-        VECTOR_STORE_DIR,
-        HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2"),
-        allow_dangerous_deserialization=True,
+    return ask_llm(
+        query=question,
+        vectorstore=vector_store,
+        llm=llm,
+        k=5,
     )
-    db = SessionLocal()
-
-    # 質問と類似している論文を，5件返す
-    # 違うPDFのチャンクが欲しい．
-    results = vector_store.similarity_search_with_score(question, 6)
-    response = []
-    for res, score in results:
-        paper_id = res.metadata["source"]
-        chunk_text = res.page_content
-        # paper_idが一致する論文を取得
-        paper = db.query(Paper).filter(Paper.paper_id == paper_id).first()
-        if paper:
-            print(f"Paper ID: {paper.paper_id}, PDF URL: {paper.pdf_url}, Similarity: {score}")
-            response.append(
-                VectorSearchResponseSchema(
-                    paper_id=paper.paper_id, pdf_url=paper.pdf_url, similarity=score, chunk_text=chunk_text
-                )
-            )
-        else:
-            print(f"Paper with ID {paper_id} not found in the database.")
-
-    db.close()
-
-    return response

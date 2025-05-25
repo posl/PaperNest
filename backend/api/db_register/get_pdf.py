@@ -20,13 +20,10 @@ from pypdf import PdfReader
 from backend.api.db_register.db_register import register_paper
 from backend.api.db_register.get_pdf_title import get_pdf_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
-from backend.config import BASE_URL, UPLOAD_DIR, VECTOR_STORE_DIR
+from backend.config import BASE_URL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
 from backend.schema.schema import UploadPDFResponseSchema
 
 router = APIRouter()  # インスタンス作成
-
-
-memory_storage: Dict[str, bytes] = {}  # PDFの保存場所
 
 # GroqのAPI keyを取得
 load_dotenv()
@@ -44,21 +41,23 @@ prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
+embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
+
 
 # ベクトルデータベースをロード
 def load_vector_store() -> FAISS:
-    embedding = HuggingFaceEmbeddings(
-        model_name="oshizo/sbert-jsnli-luke-japanese-base-lite"
-    )
+    # embeddings = HuggingFaceEmbeddings(
+    #     model_name="sentence-transformers/all-mpnet-base-v2"
+    # )
     if os.path.exists(VECTOR_STORE_DIR):
         vector_store = FAISS.load_local(
             VECTOR_STORE_DIR,
-            embedding,
+            embeddings,
             allow_dangerous_deserialization=True,
         )
     else:
         documents = [Document(page_content="", metadata={"source": ""})]
-        vector_store = FAISS.from_documents(documents, embedding)
+        vector_store = FAISS.from_documents(documents, embeddings)
 
     return vector_store
 
@@ -91,7 +90,6 @@ def embedding_text(splited_text: list, pdf_id: str) -> FAISS:
     # embeddings = HuggingFaceEmbeddings(
     #     model_name="oshizo/sbert-jsnli-luke-japanese-base-lite"
     # )
-    embeddings = HuggingFaceEmbeddings()
     # metadataにPDFのURLを追加
     documents = [
         Document(page_content=text, metadata={"source": pdf_id})
@@ -139,7 +137,6 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes, category: str) -> Dict[str, str]:
     # PDFを保存
     pdf_id = str(uuid.uuid4())
     pdf_url = f"{BASE_URL}/uploaded/{pdf_id}.pdf"
-    memory_storage[pdf_id] = pdf_bytes
 
     copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
     with open(copy_pdf_path, "wb") as f:

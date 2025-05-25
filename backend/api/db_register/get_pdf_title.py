@@ -41,7 +41,7 @@ def get_pdf_title(path):
 
     # ページ上部の20%以内にあるもののみ抽出（座標は通常0が下、yが上方向）
     page_top_y = max(r["y0"] for r in results)
-    y_cutoff = page_top_y * 0.8
+    y_cutoff = page_top_y * 0.5
 
     # フィルタ条件を厳しくする
     title_lines = [
@@ -49,7 +49,7 @@ def get_pdf_title(path):
         for r in results
         if abs(r["height"] - max_height) < threshold
         and r["y0"] > y_cutoff
-        and len(r["text"].strip()) >= 10  # 10文字以上など、ノイズ除去
+        and len(r["text"].strip()) >= 5  # 10文字以上など、ノイズ除去
     ]
 
     # y座標で上から下に並べる（順序調整）
@@ -66,5 +66,5 @@ def main(path):
 
 if __name__ == "__main__":
     # path = sys.argv[1]
-    path = "../../../pdf/A Survey on Large Language Models for Code Generation.pdf"
+    path = "../../../pdf/BLIVA.pdf"
     main(path)
