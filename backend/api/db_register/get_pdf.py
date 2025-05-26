@@ -3,7 +3,7 @@ import uuid
 from typing import Dict
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Depends
 from fastapi.responses import FileResponse
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -16,12 +16,17 @@ from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_groq import ChatGroq
 from pypdf import PdfReader
+import fitz
+import hashlib
+from sqlalchemy.orm import Session
 
 from backend.api.db_register.db_register import register_paper
 from backend.api.db_register.get_pdf_title import get_pdf_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
-from backend.config import BASE_URL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
-from backend.schema.schema import UploadPDFResponseSchema
+from backend.models.models import Paper
+from backend.database.database import get_db, engine, Base
+from backend.config import BASE_URL, UPLOAD_DIR, VECTOR_STORE_DIR, EMBEDDINGS_MODEL
+from backend.schema.schema import UploadPDFResponseSchema, PaperSchema
 
 router = APIRouter()  # インスタンス作成
 
@@ -125,8 +130,20 @@ def generate_summary(rag_chain: RunnableBinding) -> str:
 def read_root():
     return {"message": "Hello, FastAPI is running!"}
 
+# 論文1ページ目からハッシュ値を生成
+def calculate_first_page_hash(pdf_bytes: bytes) -> str:
+    """PDFの1ページ目の内容からハッシュ値を生成"""
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    if len(doc) == 0:
+        return None  # 空PDF
+    page = doc.load_page(0)  # 1ページ目（0-indexed）
 
-def analyze_pdf_from_bytes(pdf_bytes: bytes, category: str) -> Dict[str, str]:
+    # ページのテキストからハッシュを取る
+    text = page.get_text()
+    hash_value = hashlib.sha256(text.encode('utf-8')).hexdigest()
+    return hash_value
+
+def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
     # PDFを保存
     pdf_id = str(uuid.uuid4())
     pdf_url = f"{BASE_URL}/uploaded/{pdf_id}.pdf"
@@ -175,17 +192,31 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes, category: str) -> Dict[str, str]:
 
 # PDFをアップロード
 # FastAPIのエンドポイント
-@router.post("/upload")
+@router.post("/upload", response_model=UploadPDFResponseSchema)
 async def upload_pdf(
     file: UploadFile = File(...),
     category: str = Form(None),
+    db: Session = Depends(get_db),
 ):
+    # 初回のみテーブル作成
+    Base.metadata.create_all(bind=engine)
     # PDFのバリデーション
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
     pdf_bytes = await file.read()
+
+    # PDFの1ページ目からハッシュ値を計算
+    pdf_hash = calculate_first_page_hash(pdf_bytes)
+    if pdf_hash is None:
+        raise HTTPException(status_code=400, detail="PDFが空です．")
+
+    # 重複チェック：同じカテゴリとハッシュのPDFが既に存在するか？
+    existing = db.query(Paper).filter_by(category=category, hash=pdf_hash).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="このPDFはすでに登録されています．")
+
     # PDFのタイトルと要約を取得
-    pdf_info = analyze_pdf_from_bytes(pdf_bytes, category)
+    pdf_info = analyze_pdf_from_bytes(pdf_bytes)
     # print(pdf_info)
     title = pdf_info["title"]
 
@@ -203,13 +234,29 @@ async def upload_pdf(
         }
     metadata.update(pdf_info)
     metadata["category"] = category
+    metadata["hash"] = pdf_hash
     suc_or_fai = "failure"
-    suc_or_fai = register_paper(metadata, pdf_info["pdf_id"])
+    suc_or_fai = register_paper(metadata)
+    final_data = PaperSchema(
+        paper_id=metadata.get("pdf_id"),
+        title=metadata.get("title"),
+        authors=metadata.get("authors"),
+        year=metadata.get("year"),
+        conference=metadata.get("conference"),
+        bibtex=metadata.get("bibtex"),
+        citations=metadata.get("citations"),
+        core_rank=metadata.get("core_rank"),
+        pdf_url=metadata.get("pdf_url"),
+        category=metadata.get("category"),
+        summary=metadata.get("summary")
+    )
+    final_data = final_data.model_dump()
+
     if suc_or_fai == "failure":
         response = UploadPDFResponseSchema(
             success=False,
             message="登録中にエラーが発生しました．",
-            pdf_url=pdf_info["pdf_url"],
+            data=final_data,
         )
     elif suc_or_fai == "success":
         # 個別の項目が取得できているかチェック
@@ -235,13 +282,13 @@ async def upload_pdf(
             response = UploadPDFResponseSchema(
                 success=False,
                 message=f"{failed_info} の取得に失敗しました。",
-                pdf_url=pdf_info["pdf_url"],
+                data=final_data,
             )
         else:
             response = UploadPDFResponseSchema(
                 success=True,
                 message="PDFの登録が完了しました。",
-                pdf_url=pdf_info["pdf_url"],
+                data=final_data,
             )
 
     print(response)
@@ -249,9 +296,19 @@ async def upload_pdf(
 
 
 # PDFを開く
-@router.get("/uploaded/{pdf_id}.pdf")
-async def get_pdf(pdf_id: str):
-    pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
+@router.get("/uploaded/{paper_id}.pdf")
+async def get_pdf(paper_id: str):
+    # pdf_bytes = memory_storage.get(paper_id)
+    # # PDFが存在しない場合はエラーを返す
+    # if pdf_bytes is None:
+    #     raise HTTPException(status_code=404, detail="PDF not found.")
+    # # PDFを返す
+    # return StreamingResponse(
+    #     content=BytesIO(pdf_bytes),
+    #     media_type="application/pdf",
+    #     headers={"Content-Disposition": f"inline; filename={paper_id}.pdf"},
+    # )
+    pdf_path = UPLOAD_DIR / f"{paper_id}.pdf"
 
     if not pdf_path.exists():
         raise HTTPException(status_code=404, detail="PDF not found.")
@@ -259,6 +316,6 @@ async def get_pdf(pdf_id: str):
     return FileResponse(
         path=pdf_path,
         media_type="application/pdf",
-        filename=f"{pdf_id}.pdf",
-        headers={"Content-Disposition": f"inline; filename={pdf_id}.pdf"},
+        filename=f"{paper_id}.pdf",
+        headers={"Content-Disposition": f"inline; filename={paper_id}.pdf"},
     )

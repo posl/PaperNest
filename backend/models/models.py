@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, JSON
+from sqlalchemy import Column, String, Integer, JSON, UniqueConstraint
 from backend.database.database import Base
 
 
@@ -16,3 +16,8 @@ class Paper(Base):
     pdf_url = Column(String, nullable=False)
     category = Column(String)
     summary = Column(String)
+    hash = Column(String, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("category", "hash", name="uq_category_hash"),
+    )

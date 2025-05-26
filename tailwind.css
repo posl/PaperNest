@@ -101,3 +101,12 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+.custom-resize-left-bottom {
+  resize: both;
+  direction: rtl; /* リサイズハンドルを左下に寄せる */
+  text-align: left; /* テキスト自体は左揃えに戻す */
+}
+.custom-resize-left-bottom::-webkit-resizer {
+  direction: ltr;
+}
