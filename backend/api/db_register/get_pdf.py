@@ -1,9 +1,11 @@
+import hashlib
 import os
 import uuid
 from typing import Dict
 
+import fitz
 from dotenv import load_dotenv
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Depends
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -16,17 +18,15 @@ from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_groq import ChatGroq
 from pypdf import PdfReader
-import fitz
-import hashlib
 from sqlalchemy.orm import Session
 
 from backend.api.db_register.db_register import register_paper
 from backend.api.db_register.get_pdf_title import get_pdf_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
+from backend.config import BASE_URL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
+from backend.database.database import Base, engine, get_db
 from backend.models.models import Paper
-from backend.database.database import get_db, engine, Base
-from backend.config import BASE_URL, UPLOAD_DIR, VECTOR_STORE_DIR, EMBEDDINGS_MODEL
-from backend.schema.schema import UploadPDFResponseSchema, PaperSchema
+from backend.schema.schema import PaperSchema, UploadPDFResponseSchema
 
 router = APIRouter()  # インスタンス作成
 
@@ -130,6 +130,7 @@ def generate_summary(rag_chain: RunnableBinding) -> str:
 def read_root():
     return {"message": "Hello, FastAPI is running!"}
 
+
 # 論文1ページ目からハッシュ値を生成
 def calculate_first_page_hash(pdf_bytes: bytes) -> str:
     """PDFの1ページ目の内容からハッシュ値を生成"""
@@ -140,8 +141,9 @@ def calculate_first_page_hash(pdf_bytes: bytes) -> str:
 
     # ページのテキストからハッシュを取る
     text = page.get_text()
-    hash_value = hashlib.sha256(text.encode('utf-8')).hexdigest()
+    hash_value = hashlib.sha256(text.encode("utf-8")).hexdigest()
     return hash_value
+
 
 def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
     # PDFを保存
@@ -248,7 +250,7 @@ async def upload_pdf(
         core_rank=metadata.get("core_rank"),
         pdf_url=metadata.get("pdf_url"),
         category=metadata.get("category"),
-        summary=metadata.get("summary")
+        summary=metadata.get("summary"),
     )
     final_data = final_data.model_dump()
 
@@ -298,16 +300,6 @@ async def upload_pdf(
 # PDFを開く
 @router.get("/uploaded/{paper_id}.pdf")
 async def get_pdf(paper_id: str):
-    # pdf_bytes = memory_storage.get(paper_id)
-    # # PDFが存在しない場合はエラーを返す
-    # if pdf_bytes is None:
-    #     raise HTTPException(status_code=404, detail="PDF not found.")
-    # # PDFを返す
-    # return StreamingResponse(
-    #     content=BytesIO(pdf_bytes),
-    #     media_type="application/pdf",
-    #     headers={"Content-Disposition": f"inline; filename={paper_id}.pdf"},
-    # )
     pdf_path = UPLOAD_DIR / f"{paper_id}.pdf"
 
     if not pdf_path.exists():
