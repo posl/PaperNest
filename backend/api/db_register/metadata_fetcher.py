@@ -32,7 +32,10 @@ def fetch_metadata(title: str) -> dict:
 
         # ラベルの書き換え
         if metadata.get("authors") and metadata.get("year"):
-            bibtex = rewrite_bibtex_label(bibtex, metadata["authors"][0], metadata["year"], acronym)
+            for author in metadata["authors"]:
+                if author != '':
+                    bibtex = rewrite_bibtex_label(bibtex, metadata["authors"][0], metadata["year"], acronym)
+                    break
 
     final_metadata = {
         "title": metadata.get("title"),
@@ -50,7 +53,7 @@ def fetch_metadata(title: str) -> dict:
 def fetch_metadata_from_title(title: str) -> dict:
     params = {
         "query.title": title,
-        "rows": 5, 
+        "rows": 5,
         "sort": "score" #一致度の高いもの5件
     }
 
@@ -93,7 +96,7 @@ def fetch_metadata_from_title(title: str) -> dict:
 
     except httpx.RequestError as e:
         return {"error": f"Request failed: {e}"}
-    
+
 # DOIからBibTeXを取得
 def fetch_bibtex_from_doi(doi: str) -> str:
     headers = {
@@ -151,7 +154,7 @@ def get_core_rank_and_acronym(conference_name: str, entry_type: str) -> tuple[st
 def rewrite_bibtex_label(bibtex_str: str, author: str, year: int, acronym: str) -> str:
     if not bibtex_str:
         return bibtex_str
-
+    # ここが原因
     last_name = author.strip().split()[-1]
     new_label = f"{last_name}{year}{acronym}"
 

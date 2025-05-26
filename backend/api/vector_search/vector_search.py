@@ -25,11 +25,12 @@ llm = ChatGroq(
 )
 
 embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
-vector_store = FAISS.load_local(
-    VECTOR_STORE_DIR,
-    embeddings,
-    allow_dangerous_deserialization=True,
-)
+if VECTOR_STORE_DIR.exists():
+    vector_store = FAISS.load_local(
+        VECTOR_STORE_DIR,
+        embeddings,
+        allow_dangerous_deserialization=True,
+    )
 
 
 def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int):
@@ -76,7 +77,6 @@ def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int):
 
     db.close()
     return results
-    # return {"answer": answer, "results": results}
 
 
 # PDF検索質問を受け取り，類似したPDFを返す

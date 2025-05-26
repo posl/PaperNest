@@ -77,7 +77,7 @@ def read_text_from_pdf(pdf_path):
 def split_pdf_text(pdf_text: str) -> list:
     # チャンク間でoverlappingさせながらテキストを分割
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
+        chunk_size=3000,
         chunk_overlap=50,
     )
     # テキストを分割
@@ -114,13 +114,6 @@ def create_rag_chain(
     return rag_chain
 
 
-# 論文のタイトルを生成
-def generate_title(rag_chain: RunnableBinding) -> str:
-    user_input = "Get the title of the paper from the first page of the PDF. The output format is as follows.\nTitle: {title}"
-    response = rag_chain.invoke({"input": user_input})
-    return response["answer"]
-
-
 # 論文の要約を生成
 def generate_summary(rag_chain: RunnableBinding) -> str:
     user_input = "Read all pages of the PDF and summarize the paper. The output format is as follows.\nSummary: {summary}"
@@ -139,6 +132,8 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes, category: str) -> Dict[str, str]:
     pdf_url = f"{BASE_URL}/uploaded/{pdf_id}.pdf"
 
     copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
+    if not UPLOAD_DIR.exists():
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     with open(copy_pdf_path, "wb") as f:
         f.write(pdf_bytes)
 
@@ -149,7 +144,6 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes, category: str) -> Dict[str, str]:
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
 
     # タイトルを生成
-    # title = generate_title(rag_chain).replace("Title: ", "")
     title = get_pdf_title(str(copy_pdf_path))
     if any(
         phrase in title.lower() for phrase in ["unable to extract", "unable to find"]
