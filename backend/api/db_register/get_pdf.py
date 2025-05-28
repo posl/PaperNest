@@ -221,9 +221,12 @@ async def upload_pdf(
     pdf_info = analyze_pdf_from_bytes(pdf_bytes)
     # print(pdf_info)
     title = pdf_info["title"]
+    print(f"PDF Title: {title}")
+
+    openalex = False
 
     if title is not None:
-        metadata = fetch_metadata(title)
+        metadata, openalex = fetch_metadata(title)
     else:
         metadata = {
             "title": None,
@@ -234,7 +237,11 @@ async def upload_pdf(
             "citations": None,
             "core_rank": None,
         }
-    metadata.update(pdf_info)
+    metadata.update({
+        "pdf_id": pdf_info["pdf_id"],
+        "pdf_url": pdf_info["pdf_url"],
+        "summary": pdf_info["summary"]
+    })
     metadata["category"] = category
     metadata["hash"] = pdf_hash
     suc_or_fai = "failure"
@@ -269,14 +276,16 @@ async def upload_pdf(
             missing_fields.append("著者情報")
         if metadata.get("year") is None:
             missing_fields.append("出版年")
-        if metadata.get("conference") is None:
-            missing_fields.append("会議/ジャーナル名")
+        if not openalex:
+            if metadata.get("conference") is None:
+                missing_fields.append("会議/ジャーナル名")
         if metadata.get("bibtex") is None:
             missing_fields.append("BibTeX")
         if metadata.get("citations") is None:
             missing_fields.append("被引用数")
-        if metadata.get("core_rank") in ["Unknown", "Not found", "Error"]:
-            missing_fields.append("COREランク")
+        if not openalex:
+            if metadata.get("core_rank") in ["Unknown", "Not found", "Error"]:
+                missing_fields.append("COREランク")
 
         # 失敗項目がある場合は、それを列挙してメッセージを作成
         if missing_fields:
