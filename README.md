@@ -27,7 +27,7 @@ source .venv/bin/activate
 ```
 
 ### Step3: サーバーを起動
-- このコマンドは2025-hackathon/で実行してください．
+- このコマンドはPaperNest/で実行してください．
 ```bash
 uvicorn backend.main:app --reload
 ```
