@@ -75,3 +75,16 @@ class PaperUpdateResponseSchema(BaseModel):
 # 論文情報削除レスポンススキーマ
 class PaperDeleteResponseSchema(BaseModel):
     message: str
+
+# 研究テーマ名更新リクエストスキーマ
+class ResearchThemeUpdateRequestSchema(BaseModel):
+    value1: str
+    value2: str
+
+# 研究テーマ名更新レスポンススキーマ
+class ResearchThemeUpdateResponseSchema(BaseModel):
+    message: str
+
+# 研究テーマ削除レスポンススキーマ
+class ResearchThemeDeleteResponseSchema(BaseModel):
+    message: str

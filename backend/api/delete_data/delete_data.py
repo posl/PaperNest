@@ -11,9 +11,9 @@ def delete_paper(paper_id: str, db: Session = Depends(get_db)):
     paper = db.query(Paper).filter(Paper.paper_id == paper_id).first()
     
     if not paper:
-        raise HTTPException(status_code=404, detail="指定された論文は見つかりませんでした。")
+        raise HTTPException(status_code=404, detail="指定された論文は見つかりませんでした．")
     
     db.delete(paper)
     db.commit()
     
-    return PaperDeleteResponseSchema(message="論文の削除が完了しました。")
+    return PaperDeleteResponseSchema(message="論文の削除が完了しました．")
