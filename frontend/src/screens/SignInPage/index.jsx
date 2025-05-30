@@ -59,6 +59,9 @@ export default function SignInPage() {
         >
           ログイン
         </button>
+        <p className="mt-4 text-sm text-right text-blue-500 hover:underline cursor-pointer mb-6" onClick={() => navigate("/forgot-password")}>
+        パスワードを忘れた方へ
+        </p>
       </div>
     </div>
   );
