@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from backend.database.database import engine
+from backend.models.models import Base
 
 from backend.api.auth.register import router as register_router
 from backend.api.auth.login import router as login_router
@@ -14,6 +16,9 @@ from backend.api.update_data.update_data import router as update_data_router
 from backend.api.delete_data.delete_data import router as delete_data_router
 from backend.api.update_research_theme.update_research_theme import router as update_research_theme_router
 from backend.api.delete_research_theme.delete_research_theme import router as delete_research_theme_router
+
+# テーブル作成（初回のみ必要）
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
