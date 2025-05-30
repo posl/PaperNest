@@ -21,6 +21,7 @@ def register_paper(metadata: dict) -> str:
             category=metadata.get("category"),
             summary=metadata.get("summary"),
             hash=metadata.get("hash"),
+            user_id=metadata.get("user_id"),
         )
 
         db.add(paper)

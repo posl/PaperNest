@@ -25,8 +25,9 @@ from backend.api.db_register.get_pdf_title import get_pdf_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
 from backend.config import BASE_URL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
 from backend.database.database import Base, engine, get_db
-from backend.models.models import Paper
+from backend.models.models import Paper, User
 from backend.schema.schema import PaperSchema, UploadPDFResponseSchema
+from backend.utils.security import get_current_user
 
 router = APIRouter()  # インスタンス作成
 
@@ -199,6 +200,7 @@ async def upload_pdf(
     file: UploadFile = File(...),
     category: str = Form(None),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     # 初回のみテーブル作成
     Base.metadata.create_all(bind=engine)
@@ -240,10 +242,11 @@ async def upload_pdf(
     metadata.update({
         "pdf_id": pdf_info["pdf_id"],
         "pdf_url": pdf_info["pdf_url"],
-        "summary": pdf_info["summary"]
+        "summary": pdf_info["summary"],
+        "category": category,
+        "hash": pdf_hash,
+        "user_id": current_user.id,
     })
-    metadata["category"] = category
-    metadata["hash"] = pdf_hash
     suc_or_fai = "failure"
     suc_or_fai = register_paper(metadata)
     final_data = PaperSchema(
@@ -258,6 +261,7 @@ async def upload_pdf(
         pdf_url=metadata.get("pdf_url"),
         category=metadata.get("category"),
         summary=metadata.get("summary"),
+        user_id=metadata.get("user_id"),
     )
     final_data = final_data.model_dump()
 

@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Integer, JSON, UniqueConstraint
+from sqlalchemy import Column, String, Integer, JSON, UniqueConstraint, ForeignKey
+from sqlalchemy.orm import relationship
 from backend.database.database import Base
 
 
@@ -17,7 +18,17 @@ class Paper(Base):
     category = Column(String)
     summary = Column(String)
     hash = Column(String, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    uploader = relationship("User", back_populates="papers")
 
     __table_args__ = (
         UniqueConstraint("category", "hash", name="uq_category_hash"),
     )
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    elementary_school = Column(String)
+    hashed_password = Column(String)
+    papers = relationship("Paper", back_populates="uploader", cascade="all, delete-orphan")
