@@ -8,18 +8,18 @@ export const ModalPaperList = ({ isOpen, onClose, papers }) => {
 
   useEffect(() => {
     if (papers.length > 0) {
-      setSelectedPaperId(papers[0].id);
+      setSelectedPaperId(papers[0].paper_id);
     }
   }, [papers]);
 
   // ✅ 関連度順にソート
   const sortedPapers = useMemo(() => {
-    return [...papers].sort((a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0));
+    return [...papers].sort((a, b) => (b.similarity ?? 0) - (a.similarity ?? 0));
   }, [papers]);
 
   if (!isOpen) return null;
 
-  const selectedPaper = sortedPapers.find((p) => p.id === selectedPaperId);
+  const selectedPaper = sortedPapers.find((p) => p.paper_id === selectedPaperId);
 
   return (
     <div
@@ -47,17 +47,17 @@ export const ModalPaperList = ({ isOpen, onClose, papers }) => {
         <div className="flex flex-col gap-2 mb-6">
           {sortedPapers.map((paper) => (
             <button
-              key={paper.id}
-              onClick={() => setSelectedPaperId(paper.id)}
+              key={paper.paper_id}
+              onClick={() => setSelectedPaperId(paper.paper_id)}
               className={`text-left px-4 py-2 rounded-lg transition font-medium ${
-                paper.id === selectedPaperId
+                paper.paper_id === selectedPaperId
                   ? "bg-sky-100 text-sky-800"
                   : "hover:bg-gray-100 text-gray-800"
               }`}
             >
               {paper.title}
               {/* ↓ 表示したければスコア表示も */}
-              <span className="ml-2 text-xs text-gray-400">(一致度：{paper.relevanceScore})</span>
+              <span className="ml-2 text-xs text-gray-400">(一致度：{paper.similarity})</span>
             </button>
           ))}
         </div>
@@ -76,9 +76,9 @@ export const ModalPaperList = ({ isOpen, onClose, papers }) => {
                     <FaQuoteRight />
                   </button>
                 )}
-                {selectedPaper.pdf && (
+                {selectedPaper.pdf_url && (
                   <a
-                    href={selectedPaper.pdf}
+                    href={selectedPaper.pdf_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#aac2de] text-white rounded-md text-sm hover:bg-[#90b4d4] hover:scale-105 hover:brightness-105 transition-all"
@@ -91,16 +91,16 @@ export const ModalPaperList = ({ isOpen, onClose, papers }) => {
             </div>
 
             <p><strong>Title:</strong> {selectedPaper.title}</p>
-            <p><strong>Author:</strong> {selectedPaper.author}</p>
+            <p><strong>Author:</strong> {selectedPaper.authors}</p>
             <p><strong>Year:</strong> {selectedPaper.year}</p>
             <p><strong>Conferencce:</strong> {selectedPaper.conference}</p>
-            <p><strong>Core-Rank:</strong> {selectedPaper["core-rank"]}</p>
-            <p><strong>Book:</strong> {selectedPaper.book}</p>
+            <p><strong>Core-Rank:</strong> {selectedPaper.core_rank}</p>
+            <p><strong>Citation:</strong> {selectedPaper.citations}</p>
 
             <div>
               <p className="font-semibold text-gray-700 mb-1">Abstract:</p>
               <div className="mt-1 max-h-[200px] overflow-y-auto bg-gray-50 p-3 rounded-lg text-sm text-gray-800 border">
-                {selectedPaper.abstract}
+                {selectedPaper.summary}
               </div>
             </div>
           </div>
