@@ -8,6 +8,7 @@ import SettingsPage from "./screens/UserPage/SettingsPage";
 import PrivateRoute from "./components/PrivateRoute";
 import ForgotPasswordPage from "./screens/ForgotPasswordPage";
 
+
 function App() {
   return (
     <BrowserRouter>

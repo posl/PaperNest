@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 export default function SignUpPage() {
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuth();
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [username, setUsername] = useState("");
   const [schoolName, setSchoolName] = useState("");
@@ -34,22 +35,45 @@ export default function SignUpPage() {
     }
     // 🔍 ユーザー名の重複チェック
     try {
-        const res = await fetch("/api/check-username", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
+        const res = await fetch("http://localhost:8000/register/user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username,
+            elementary_school: schoolName, // ← APIに合わせる
+            password,
+          }),
         });
-
+      
         const data = await res.json();
-
-        if (data.exists) {
-        setErrorMessage("このユーザー名はすでに使われています。");
-        return;
+      
+        if (!res.ok) {
+          if (res.status === 400) {
+            // 重複ユーザー名のエラーメッセージ
+            setErrorMessage(data.detail || "登録に失敗しました。");
+          } else if (res.status === 422) {
+            // バリデーションエラー
+            const firstError = data?.detail?.[0]?.msg || "入力に誤りがあります。";
+            setErrorMessage(firstError);
+          } else {
+            setErrorMessage("登録中に問題が発生しました。");
+          }
+          return;
         }
-    } catch (err) {
-        setErrorMessage("ユーザー名確認中にエラーが発生しました。");
-        return;
-    }
+      
+        // 成功時
+        // 成功時
+        setSuccessMessage("✅ アカウント登録が完了しました！ログイン状態でホームに移動します。");
+        setTimeout(() => {
+        setIsAuthenticated(true);
+        navigate("/app");
+        }, 2000);
+        console.log("登録成功:", data);
+        setIsAuthenticated(true);
+        navigate("/app");
+      } catch (err) {
+        setErrorMessage("サーバーに接続できませんでした。");
+      }
 
     // エラーなし → 登録処理へ
     setErrorMessage("");
@@ -118,6 +142,11 @@ export default function SignUpPage() {
         {/* ❗ エラー表示 */}
         {errorMessage && (
           <p className="text-red-600 text-sm mb-4 text-center">{errorMessage}</p>
+        )}
+        {successMessage && (
+            <p className="text-green-600 text-sm mb-4 text-center">
+                {successMessage}
+            </p>
         )}
 
         <button

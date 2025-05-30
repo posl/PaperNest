@@ -16,11 +16,22 @@ from backend.api.update_data.update_data import router as update_data_router
 from backend.api.delete_data.delete_data import router as delete_data_router
 from backend.api.update_research_theme.update_research_theme import router as update_research_theme_router
 from backend.api.delete_research_theme.delete_research_theme import router as delete_research_theme_router
+from fastapi.middleware.cors import CORSMiddleware
 
 # テーブル作成（初回のみ必要）
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+# 👇 CORSを設定：Reactからのアクセスを許可する
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # ← ReactのURL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 app.include_router(register_router)
 app.include_router(login_router)
@@ -36,5 +47,6 @@ app.include_router(update_data_router)
 app.include_router(delete_data_router)
 app.include_router(update_research_theme_router)
 app.include_router(delete_research_theme_router)
+
 
 
