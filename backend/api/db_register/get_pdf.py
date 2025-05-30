@@ -24,7 +24,7 @@ from backend.api.db_register.db_register import register_paper
 from backend.api.db_register.get_pdf_title import get_pdf_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
 from backend.config import BASE_URL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
-from backend.database.database import Base, engine, get_db
+from backend.database.database import get_db
 from backend.models.models import Paper, User
 from backend.schema.schema import PaperSchema, UploadPDFResponseSchema
 from backend.utils.security import get_current_user
@@ -202,8 +202,7 @@ async def upload_pdf(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # 初回のみテーブル作成
-    Base.metadata.create_all(bind=engine)
+
     # PDFのバリデーション
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed.")

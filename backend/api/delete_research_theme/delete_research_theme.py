@@ -1,10 +1,11 @@
 import os
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from backend.models.models import Paper
+from backend.models.models import Paper, User
 from backend.database.database import get_db
 from backend.schema.schema import ResearchThemeDeleteResponseSchema
 from backend.config import UPLOAD_DIR
+from backend.utils.security import get_current_user
 
 router = APIRouter()
 
@@ -14,13 +15,13 @@ router = APIRouter()
 )
 def delete_papers_by_theme(
     research_theme: str,
-    user_id: int = Query(..., description="削除対象のユーザーID"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    # ユーザーに紐づいた指定テーマの論文だけを取得
+    # 認証ユーザーに紐づいた指定テーマの論文だけを取得
     papers = db.query(Paper).filter(
         Paper.category == research_theme,
-        Paper.user_id == user_id
+        Paper.user_id == current_user.id
     ).all()
 
     if not papers:

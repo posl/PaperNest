@@ -32,7 +32,6 @@ class PasswordChangeResponse(BaseModel):
 
 # パスワードリセットリクエストスキーマ
 class PasswordResetRequest(BaseModel):
-    username: str
     elementary_school: str
     new_password: str
 
