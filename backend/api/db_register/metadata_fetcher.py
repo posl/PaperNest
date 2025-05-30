@@ -15,7 +15,7 @@ def fetch_metadata(title: str) -> dict:
     print(f"Metadata fetched: {metadata}")
 
     if "error" in metadata:
-        return metadata
+        return metadata, openalex
 
     bibtex = None
     core_rank = "Unknown"
@@ -159,7 +159,7 @@ def fetch_metadata_from_title(title: str, similarity_threshold=0.93) -> dict:
             score = similarity(title, item_title)
             print(f"[Crossref] Similarity score for '{item_title}': {score}")
 
-            if (score > best_score or 
+            if (score > best_score or
                 (score == best_score and best_item and is_newer_crossref(item, best_item))):
                 best_item = item
                 best_score = score
@@ -240,7 +240,7 @@ def get_core_rank_and_acronym(conference_name: str, entry_type: str) -> tuple[st
 def rewrite_bibtex_label(bibtex_str: str, author: str, year: int, acronym: str) -> str:
     if not bibtex_str or acronym == "unknown":
         return bibtex_str
-    
+
     last_name = author.strip().split()[-1]
     new_label = f"{last_name}{year}{acronym}"
 

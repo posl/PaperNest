@@ -35,12 +35,17 @@ if VECTOR_STORE_DIR.exists():
 
 def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int):
     vectorstoreindex = VectorStoreIndexWrapper(vectorstore=vectorstore)
+    # LLMに質問を投げ，回答を生成
     answer = vectorstoreindex.query(query, llm)
     print(f"Answer: {answer}")
 
     results = []
     paper_ids = set()
     db = SessionLocal()
+    # LLMの回答を分割し，分割されたそれぞれの文に対してベクトル検索
+    lope_flg = True
+    timeout = 3000
+    # while lope_flg:
     for sentence in answer.split("\n"):
         if len(results) >= k:
             break
@@ -53,6 +58,7 @@ def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int):
                 continue
             paper_ids.add(paper_id)
             paper = db.query(Paper).filter(Paper.paper_id == paper_id).first()
+            # 論文が存在する場合は，情報を返す
             if paper:
                 results.append(
                     VectorSearchResponseSchema(
