@@ -1,9 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { LandingPage } from "./screens/LandingPage";
+import App from "./App"; // ← Appを読み込む
 
 createRoot(document.getElementById("app")).render(
   <StrictMode>
-    <LandingPage />
-  </StrictMode>,
+    <App />
+  </StrictMode>
 );
