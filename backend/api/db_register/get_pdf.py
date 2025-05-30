@@ -215,7 +215,7 @@ async def upload_pdf(
         raise HTTPException(status_code=400, detail="PDFが空です．")
 
     # 重複チェック：同じカテゴリとハッシュのPDFが既に存在するか？
-    existing = db.query(Paper).filter_by(category=category, hash=pdf_hash).first()
+    existing = db.query(Paper).filter_by(category=category, hash=pdf_hash, user_id=current_user.id).first()
     if existing:
         raise HTTPException(status_code=409, detail="このPDFはすでに登録されています．")
 
