@@ -17,3 +17,5 @@ app.include_router(update_data_router)
 app.include_router(delete_data_router)
 app.include_router(update_research_theme_router)
 app.include_router(delete_research_theme_router)
+
+

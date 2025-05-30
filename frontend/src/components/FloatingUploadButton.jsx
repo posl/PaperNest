@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Button } from "../components/ui/button";
+import { Button } from "./ui/button";
 import { PlusIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Separator } from "../components/ui/separator";
+import { Separator } from "./ui/separator";
 import { Icon } from '@iconify/react';
 import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 import { TabScrollArea } from "./header/TabScrollArea";
