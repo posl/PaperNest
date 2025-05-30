@@ -2,6 +2,33 @@
 
 このリポジトリは，論文管理用アプリPaperNestの開発用リポジトリです．
 
+## セットアップ手順 (frontend + backend)
+
+### 1. .envの作成
+.devcontainer/Docker/backendに.envファイルを作成
+keyはトイさんに聞いてください
+
+.envファイルの形式
+```bash
+GROQ_API_KEY=your_api_key
+
+```
+
+### 2. コンテナの作成，機動
+
+```bach
+cd .devcontainer
+docker compose build --no-cache
+docker compose up
+```
+
+### 3. Webにアクセス
+
+backend -> http://localhost:8000/  
+frontend -> http://localhost:3000/  
+
+
+
 ## 🚀 セットアップ手順（フロントエンド）
 
 ### Step 1: パッケージのインストール
