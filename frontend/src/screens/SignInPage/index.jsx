@@ -1,20 +1,25 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "../../context/AuthContext"; // ✅ 追加
 
 export default function SignInPage() {
   const navigate = useNavigate();
+  const { setIsAuthenticated } = useAuth(); // ✅ 追加
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  // 全角英数字を半角に変換
   const toHalfWidth = (str) =>
     str.replace(/[！-～]/g, (ch) =>
       String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
     ).replace(/　/g, " ");
 
   const handleSignIn = () => {
-    console.log("ログイン:", { email, password });
+    console.log("ログイン:", { username, password });
+
+    // ✅ 認証状態を有効に
+    setIsAuthenticated(true);
+
     navigate("/app");
   };
 
@@ -32,10 +37,10 @@ export default function SignInPage() {
         </h2>
 
         <input
-          type="email"
-          placeholder="メールアドレス"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="username"
+          placeholder="ユーザ名"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           className="w-full mb-4 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 

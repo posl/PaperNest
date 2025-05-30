@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
+  const { setIsAuthenticated } = useAuth();
 
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
+  const [schoolName, setSchoolName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -15,11 +17,11 @@ export default function SignUpPage() {
     return regex.test(pw);
   };
 
-  const handleSignUp = () => {
-    if (!username || !email || !password || !confirmPassword) {
-      setErrorMessage("すべての項目を入力してください。");
-      return;
-    }
+  const handleSignUp = async () => {
+    if (!username || !schoolName || !password || !confirmPassword) {
+        setErrorMessage("すべての項目を入力してください。");
+        return;
+      }
 
     if (!isValidPassword(password)) {
       setErrorMessage("パスワードは6文字以上の半角英数字で入力してください。");
@@ -30,10 +32,29 @@ export default function SignUpPage() {
       setErrorMessage("パスワードが一致しません。");
       return;
     }
+    // 🔍 ユーザー名の重複チェック
+    try {
+        const res = await fetch("/api/check-username", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+        });
+
+        const data = await res.json();
+
+        if (data.exists) {
+        setErrorMessage("このユーザー名はすでに使われています。");
+        return;
+        }
+    } catch (err) {
+        setErrorMessage("ユーザー名確認中にエラーが発生しました。");
+        return;
+    }
 
     // エラーなし → 登録処理へ
     setErrorMessage("");
-    console.log("SignUp:", { username, email, password });
+    console.log("SignUp:", { username, schoolName, password });
+    setIsAuthenticated(true);
     navigate("/app");
   };
     // 全角英数字を半角に変換する関数
@@ -63,13 +84,6 @@ export default function SignUpPage() {
           className="w-full mb-4 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
-        <input
-          type="email"
-          placeholder="メールアドレス"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full mb-4 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
 
         <input
           type="password"
@@ -89,8 +103,17 @@ export default function SignUpPage() {
           placeholder="パスワード（確認）"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(toHalfWidth(e.target.value))}
-          className="w-full mb-6 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full mb-4 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+
+        <input
+        type="text"
+        placeholder="小学校名"
+        value={schoolName}
+        onChange={(e) => setSchoolName(e.target.value)}
+        className="w-full mb-6 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        
 
         {/* ❗ エラー表示 */}
         {errorMessage && (
