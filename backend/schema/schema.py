@@ -132,8 +132,8 @@ class PaperDeleteResponseSchema(BaseModel):
 
 # 研究テーマ名更新リクエストスキーマ
 class ResearchThemeUpdateRequestSchema(BaseModel):
-    value1: str
-    value2: str
+    old_research_theme: str
+    new_research_theme: str
 
 # 研究テーマ名更新レスポンススキーマ
 class ResearchThemeUpdateResponseSchema(BaseModel):

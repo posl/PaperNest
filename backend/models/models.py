@@ -22,7 +22,7 @@ class Paper(Base):
     uploader = relationship("User", back_populates="papers")
 
     __table_args__ = (
-        UniqueConstraint("category", "hash", name="uq_category_hash"),
+        UniqueConstraint("user_id", "category", "hash", name="uq_user_category_hash"),
     )
 
 class User(Base):
