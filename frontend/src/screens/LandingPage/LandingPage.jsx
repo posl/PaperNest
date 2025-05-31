@@ -5,7 +5,7 @@ import { Sidebar } from "../../components/Sidebar";
 import { TableSection } from "../../components/Table";
 import { QuestionInput } from "../../components/QuestionInput";
 import { FloatingUploadButton } from "../../components/FloatingUploadButton";
-import { useLandingPageState } from "../LandingPage/hooks/useLandingPageState";
+import { useLandingPageState } from "./hooks/useLandingPageState";
 import { ModalPaperList } from "../../components/ModalPaperList";
 
 

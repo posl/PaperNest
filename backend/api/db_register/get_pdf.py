@@ -15,6 +15,7 @@ from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
+from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from pypdf import PdfReader
@@ -23,16 +24,11 @@ from sqlalchemy.orm import Session
 from backend.api.db_register.db_register import register_paper
 from backend.api.db_register.get_pdf_title import get_pdf_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
-from backend.config import (
-    BASE_URL,
-    CHAT_MODEL,
-    EMBEDDINGS_MODEL,
-    UPLOAD_DIR,
-    VECTOR_STORE_DIR,
-)
-from backend.database.database import Base, engine, get_db
-from backend.models.models import Paper
+from backend.config import BASE_URL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
+from backend.database.database import get_db
+from backend.models.models import Paper, User
 from backend.schema.schema import PaperSchema, UploadPDFResponseSchema
+from backend.utils.security import get_current_user
 
 router = APIRouter()  # インスタンス作成
 
@@ -200,9 +196,9 @@ async def upload_pdf(
     file: UploadFile = File(...),
     category: str = Form(None),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    # 初回のみテーブル作成
-    Base.metadata.create_all(bind=engine)
+
     # PDFのバリデーション
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
@@ -214,7 +210,7 @@ async def upload_pdf(
         raise HTTPException(status_code=400, detail="PDFが空です．")
 
     # 重複チェック：同じカテゴリとハッシュのPDFが既に存在するか？
-    existing = db.query(Paper).filter_by(category=category, hash=pdf_hash).first()
+    existing = db.query(Paper).filter_by(category=category, hash=pdf_hash, user_id=current_user.id).first()
     if existing:
         raise HTTPException(status_code=409, detail="このPDFはすでに登録されています．")
 
@@ -238,15 +234,14 @@ async def upload_pdf(
             "citations": None,
             "core_rank": None,
         }
-    metadata.update(
-        {
-            "pdf_id": pdf_info["pdf_id"],
-            "pdf_url": pdf_info["pdf_url"],
-            "summary": pdf_info["summary"],
-        }
-    )
-    metadata["category"] = category
-    metadata["hash"] = pdf_hash
+    metadata.update({
+        "pdf_id": pdf_info["pdf_id"],
+        "pdf_url": pdf_info["pdf_url"],
+        "summary": pdf_info["summary"],
+        "category": category,
+        "hash": pdf_hash,
+        "user_id": current_user.id,
+    })
     suc_or_fai = "failure"
     suc_or_fai = register_paper(metadata)
     final_data = PaperSchema(
@@ -261,6 +256,7 @@ async def upload_pdf(
         pdf_url=metadata.get("pdf_url"),
         category=metadata.get("category"),
         summary=metadata.get("summary"),
+        user_id=metadata.get("user_id"),
     )
     final_data = final_data.model_dump()
 

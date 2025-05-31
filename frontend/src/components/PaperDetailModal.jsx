@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button } from "../components/ui/button";
+import { Button } from "./ui/button";
 import { EditForm } from "./EditForm";
 import { FaFilePdf } from "react-icons/fa";
 import { BibtexModal } from "./BibtexModal";

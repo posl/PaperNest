@@ -10,10 +10,10 @@ router = APIRouter()
 def update_paper_field(update_request: PaperUpdateRequestSchema, db: Session = Depends(get_db)):
     paper = db.query(Paper).filter(Paper.paper_id == update_request.paper_id).first()
     if not paper:
-        raise HTTPException(status_code=404, detail="Paper not found")
+        raise HTTPException(status_code=404, detail="論文が見つかりません")
 
     if update_request.field not in paper.__dict__:
-        raise HTTPException(status_code=400, detail="Invalid field name")
+        raise HTTPException(status_code=400, detail="フィールドが存在しません")
 
     setattr(paper, update_request.field, update_request.value)
     db.commit()
