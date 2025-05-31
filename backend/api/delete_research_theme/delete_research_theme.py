@@ -10,7 +10,7 @@ from backend.utils.security import get_current_user
 router = APIRouter()
 
 @router.delete(
-    "/research_theme/delete/{research_theme}",
+    "/delete/{research_theme}",
     response_model=ResearchThemeDeleteResponseSchema,
 )
 def delete_papers_by_theme(

@@ -169,7 +169,7 @@ def fetch_metadata_from_title(title: str, similarity_threshold=0.93) -> dict:
 
         if best_score < similarity_threshold:
             print(f"Low similarity ({best_score}) in Crossref. Trying OpenAlex...")
-            return fetch_metadata_from_openalex(title), True
+            return fetch_metadata_from_openalex(title, similarity_threshold), True
 
         if best_item:
             return {
@@ -219,10 +219,10 @@ def get_core_rank_and_acronym(conference_name: str, entry_type: str) -> tuple[st
         df = pd.read_csv(csv_path)
         titles = df['Title'].dropna().astype(str)
 
-        # conference_name が Title に部分一致する行を探す（大文字小文字を無視）
-        matched = titles[titles.str.lower().str.contains(conference_name.lower())]
+        # Title が conference_name に部分一致する行を探す（大文字小文字を無視）
+        matched = titles[titles.apply(lambda t: t.lower() in conference_name.lower())]
         if not matched.empty:
-            row = df[df['Title'] == matched.iloc[0]].iloc[0]
+            row = df.loc[matched.index[0]]
             return row.get('Rank', 'Unknown'), row.get('Acronym', 'unknown')
         else:
             return "Unknown", "unknown"
@@ -269,7 +269,7 @@ def fetch_bibtex_openalex(metadata: dict) -> str:
     bibtex_id = f"{first_author_surname}{year}"
 
     bibtex_lines = [
-        f"@article{{{bibtex_id},",
+        f"@article{{{bibtex_id}}},",
         f"  title={{{title}}},",
         f"  author={{{bibtex_authors}}},",
         f"  year={{{year}}},"
