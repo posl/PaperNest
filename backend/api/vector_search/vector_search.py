@@ -7,7 +7,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_groq import ChatGroq
 
-from backend.config import EMBEDDINGS_MODEL, VECTOR_STORE_DIR
+from backend.config import EMBEDDINGS_MODEL, VECTOR_STORE_DIR, CHAT_MODEL
 from backend.database.database import SessionLocal
 from backend.models.models import Paper
 from backend.schema.schema import (
@@ -21,7 +21,7 @@ load_dotenv()
 groq_api_key = os.environ["GROQ_API_KEY"]
 llm = ChatGroq(
     groq_api_key=groq_api_key,
-    model_name="llama3-70b-8192",
+    model_name=CHAT_MODEL,
 )
 
 embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)

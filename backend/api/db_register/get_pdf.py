@@ -17,14 +17,13 @@ from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
-from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
 from backend.api.db_register.db_register import register_paper
 from backend.api.db_register.get_pdf_title import get_pdf_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
-from backend.config import BASE_URL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
+from backend.config import BASE_URL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR, CHAT_MODEL
 from backend.database.database import get_db
 from backend.models.models import Paper, User
 from backend.schema.schema import PaperSchema, UploadPDFResponseSchema
