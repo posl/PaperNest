@@ -274,6 +274,7 @@ async def upload_pdf(
         # 個別の項目が取得できているかチェック
         missing_fields = []
         if metadata.get("title") is None:
+            metadata["title"] = title
             missing_fields.append("タイトル")
         if metadata.get("authors") is None or not metadata["authors"]:
             missing_fields.append("著者情報")

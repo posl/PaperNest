@@ -48,7 +48,7 @@ class VectorSearchRequestSchema(BaseModel):
 # ベクトル検索の応答用スキーマ
 class VectorSearchResponseSchema(BaseModel):
     paper_id: str
-    title: str
+    title: Optional[str] = None
     authors: Optional[List[str]]
     year: Optional[int] = None
     conference: Optional[str] = None
