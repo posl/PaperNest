@@ -62,10 +62,32 @@ export default function SignUpPage() {
       // 🎉 成功時の処理
       setErrorMessage("");
       setSuccessMessage("✅ アカウント登録が完了しました！ホームに移動します。");
-  
+      try {
+        const loginRes = await fetch("http://localhost:8000/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            username: username,
+            password: password,
+          }),
+        });
+      
+        if (!loginRes.ok) throw new Error("自動ログインに失敗しました");
+      
+        const loginData = await loginRes.json();
+        localStorage.setItem("token", loginData.access_token);
+        setIsAuthenticated(true);
+        navigate("/app", { replace: true });
+      } catch (loginErr) {
+        console.error("ログイン失敗:", loginErr);
+        setErrorMessage("ログイン処理に失敗しました。再度ログインしてください。");
+      }
+      
       setTimeout(() => {
         setIsAuthenticated(true);
-        navigate("/app");
+        navigate("/app", { replace: true });
       }, 1500);
       console.log("登録成功:", data);
     } catch (err) {

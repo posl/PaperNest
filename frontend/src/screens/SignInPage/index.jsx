@@ -1,13 +1,19 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { useAuth } from "../../context/AuthContext"; // ✅ 追加
+import { useAuth } from "../../context/AuthContext";
 
 export default function SignInPage() {
   const navigate = useNavigate();
-  const { setIsAuthenticated } = useAuth(); // ✅ 追加
-
+  const { isAuthenticated, setIsAuthenticated } = useAuth(); // ✅ 先に取得
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    // ログイン済みなら /app にリダイレクト
+    if (isAuthenticated) {
+      navigate("/app", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const toHalfWidth = (str) =>
     str.replace(/[！-～]/g, (ch) =>
@@ -18,7 +24,7 @@ export default function SignInPage() {
     const formData = new URLSearchParams();
     formData.append("username", username.trim());
     formData.append("password", password.trim());
-  
+
     try {
       const response = await fetch("http://localhost:8000/login", {
         method: "POST",
@@ -27,18 +33,15 @@ export default function SignInPage() {
         },
         body: formData.toString(),
       });
-  
+
       if (!response.ok) {
         throw new Error("ログインに失敗しました");
       }
-  
+
       const data = await response.json();
-  
-      // 取得したトークンを保存（必要であれば）
       localStorage.setItem("token", data.access_token);
-  
-      setIsAuthenticated(true);
-      navigate("/app");
+      setIsAuthenticated(true); // ✅ 認証状態を更新
+      navigate("/app", { replace: true }); // ✅ 履歴に signin を残さない
     } catch (error) {
       console.error("ログインエラー:", error);
       alert("ユーザ名またはパスワードが間違っています。");
@@ -59,7 +62,7 @@ export default function SignInPage() {
         </h2>
 
         <input
-          type="username"
+          type="text"
           placeholder="ユーザ名"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -81,8 +84,11 @@ export default function SignInPage() {
         >
           ログイン
         </button>
-        <p className="mt-4 text-sm text-right text-blue-500 hover:underline cursor-pointer mb-6" onClick={() => navigate("/forgot-password")}>
-        パスワードを忘れた方へ
+        <p
+          className="mt-4 text-sm text-right text-blue-500 hover:underline cursor-pointer mb-6"
+          onClick={() => navigate("/forgot-password")}
+        >
+          パスワードを忘れた方へ
         </p>
       </div>
     </div>
