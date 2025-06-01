@@ -16,6 +16,12 @@ class UserOut(BaseModel):
     class Config:
         orm_mode = True
 
+# ユーザ認証リフレッシュトークン付きトークンスキーマ
+class TokenWithRefresh(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str
+
 # ユーザ認証トークンスキーマ
 class Token(BaseModel):
     access_token: str
@@ -32,6 +38,7 @@ class PasswordChangeResponse(BaseModel):
 
 # パスワードリセットリクエストスキーマ
 class PasswordResetRequest(BaseModel):
+    username: str
     elementary_school: str
     new_password: str
 

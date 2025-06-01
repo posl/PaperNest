@@ -11,7 +11,10 @@ keyはトイさんに聞いてください
 .envファイルの形式
 ```bash
 GROQ_API_KEY=your_api_key
-
+SECRET_KEY=hoge
+ALGORITHM=fuga
+ACCESS_TOKEN_EXPIRE_MINUTES=hogehoge
+REFRESH_TOKEN_EXPIRE_DAYS=fugafuga
 ```
 
 ### 2. コンテナの作成，機動
