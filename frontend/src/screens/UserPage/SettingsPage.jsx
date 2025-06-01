@@ -55,6 +55,10 @@ export default function SettingsPage() {
       setMessage("新しいパスワードと確認用パスワードが一致しません");
       return;
     }
+    if (!isValidPassword(newPassword)) {
+        setMessage("パスワードは6文字以上の半角英数字で入力してください。");
+        return;
+      }
 
     try {
       const res = await fetch("http://localhost:8000/change/password", {
@@ -86,6 +90,15 @@ export default function SettingsPage() {
   const navigate = useNavigate(); // 👈 ナビゲーション用
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
+
+  const toHalfWidth = (str) =>
+    str.replace(/[！-～]/g, (ch) =>
+    String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
+    ).replace(/　/g, " "); // 全角スペースも半角に変換
+    const isValidPassword = (pw) => {
+        const regex = /^[a-zA-Z0-9]{6,}$/; // 半角英数字6文字以上
+        return regex.test(pw);
+    };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -210,30 +223,33 @@ export default function SettingsPage() {
       </div>
       {showModal && (
         <Modal onClose={() => setShowModal(false)} title="パスワードを変更">
-          <div className="space-y-4">
+          <div className="">
             <input
               type="password"
               placeholder="現在のパスワード"
               value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-600"
+              onChange={(e) => setCurrentPassword(toHalfWidth(e.target.value))}
+              className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-600"
             />
             <input
               type="password"
               placeholder="新しいパスワード"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={(e) => setNewPassword(toHalfWidth(e.target.value))}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-600"
             />
+            <p className="pl-4 text-sm text-gray-300 mt-1 mb-1">
+                パスワードは6文字以上の半角英数字で入力してください。
+            </p>
             <input
               type="password"
               placeholder="新しいパスワード（確認）"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-600"
+              onChange={(e) => setConfirmPassword(toHalfWidth(e.target.value))}
+              className="w-full mb-4 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-600"
             />
             {showModal && message && message !== "パスワードを変更しました！" && (
-            <p className="text-center text-red-500">{message}</p>
+            <p className="text-sm text-center mb-4 text-red-600">{message}</p>
             )}
             <button
               onClick={handlePasswordUpdate}
