@@ -23,29 +23,24 @@ def delete_papers_by_theme(
         Paper.category == research_theme,
         Paper.user_id == current_user.id
     ).all()
-
-    if not papers:
-        raise HTTPException(
-            status_code=404,
-            detail="指定された研究テーマに一致する論文が見つかりませんでした．"
-        )
     
-    for paper in papers:
-        # PDFファイル削除処理
-        pdf_path = os.path.join(UPLOAD_DIR, f"{paper.paper_id}.pdf")
-        if os.path.exists(pdf_path):
-            try:
-                os.remove(pdf_path)
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"PDFファイルの削除中にエラーが発生しました（paper_id: {paper.paper_id}）: {e}"
-                )
+    if papers:
+        for paper in papers:
+            # PDFファイル削除処理
+            pdf_path = os.path.join(UPLOAD_DIR, f"{paper.paper_id}.pdf")
+            if os.path.exists(pdf_path):
+                try:
+                    os.remove(pdf_path)
+                except Exception as e:
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"PDFファイルの削除中にエラーが発生しました（paper_id: {paper.paper_id}）: {e}"
+                    )
 
-        # データベースから削除
-        db.delete(paper)
+            # データベースから削除
+            db.delete(paper)
 
-    db.commit()
+        db.commit()
     
     return ResearchThemeDeleteResponseSchema(
         message="研究テーマの削除が完了しました．"

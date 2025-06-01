@@ -22,6 +22,10 @@ class TokenWithRefresh(BaseModel):
     refresh_token: str
     token_type: str
 
+# リフレッシュリクエストスキーマ
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
 # ユーザ認証トークンスキーマ
 class Token(BaseModel):
     access_token: str

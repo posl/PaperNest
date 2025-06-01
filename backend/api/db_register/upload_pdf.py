@@ -295,13 +295,13 @@ async def upload_pdf(
             failed_info = ", ".join(missing_fields)
             response = UploadPDFResponseSchema(
                 success=False,
-                message=f"{failed_info} の取得に失敗しました。",
+                message=f"{failed_info} の取得に失敗しました．",
                 data=final_data,
             )
         else:
             response = UploadPDFResponseSchema(
                 success=True,
-                message="PDFの登録が完了しました。",
+                message="PDFの登録が完了しました．",
                 data=final_data,
             )
 

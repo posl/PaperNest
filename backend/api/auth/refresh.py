@@ -3,15 +3,18 @@ from jose import JWTError, jwt
 from backend.models.models import User
 from backend.database.database import get_db
 from backend.utils.security import create_access_token, SECRET_KEY, ALGORITHM
-from backend.schema.schema import Token
+from backend.schema.schema import Token, RefreshTokenRequest
 from sqlalchemy.orm import Session
 
 router = APIRouter()
 
 @router.post("/refresh", response_model=Token)
-def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
+def refresh_token(
+    request: RefreshTokenRequest,
+    db: Session = Depends(get_db)
+):
     try:
-        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(request.refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="不正なリフレッシュトークン")
