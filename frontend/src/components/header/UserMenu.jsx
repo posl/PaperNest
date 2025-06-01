@@ -8,6 +8,8 @@ export const UserMenu = ({ isMenuOpen, setIsMenuOpen }) => {
   const { setIsAuthenticated } = useAuth();
 
   const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/";
     // ここでログイン状態をクリアしたりすればOK
     setIsAuthenticated(false);
     console.log("ログアウトしました");
@@ -31,12 +33,12 @@ export const UserMenu = ({ isMenuOpen, setIsMenuOpen }) => {
           <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
           <div className="absolute right-0 top-[60px] w-[180px] bg-white border border-gray-200 rounded-lg shadow-lg z-50">
             <ul className="py-2">
-              <li
+              {/* <li
                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                 onClick={() => handleNavigate("/profile")}
               >
                 プロフィール
-              </li>
+              </li> */}
               <li
                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                 onClick={() => handleNavigate("/settings")}
