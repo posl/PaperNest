@@ -14,13 +14,35 @@ export default function SignInPage() {
       String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
     ).replace(/　/g, " ");
 
-  const handleSignIn = () => {
-    console.log("ログイン:", { username, password });
-
-    // ✅ 認証状態を有効に
-    setIsAuthenticated(true);
-
-    navigate("/app");
+  const handleSignIn = async () => {
+    const formData = new URLSearchParams();
+    formData.append("username", username.trim());
+    formData.append("password", password.trim());
+  
+    try {
+      const response = await fetch("http://localhost:8000/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: formData.toString(),
+      });
+  
+      if (!response.ok) {
+        throw new Error("ログインに失敗しました");
+      }
+  
+      const data = await response.json();
+  
+      // 取得したトークンを保存（必要であれば）
+      localStorage.setItem("token", data.access_token);
+  
+      setIsAuthenticated(true);
+      navigate("/app");
+    } catch (error) {
+      console.error("ログインエラー:", error);
+      alert("ユーザ名またはパスワードが間違っています。");
+    }
   };
 
   return (
