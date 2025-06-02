@@ -40,10 +40,18 @@ class PasswordChangeRequest(BaseModel):
 class PasswordChangeResponse(BaseModel):
     message: str
 
+# パスワードリセット用認証リクエストスキーマ
+class VerifyRequest(BaseModel):
+    username: str
+    elementary_school: str
+
+# パスワードリセット用認証レスポンススキーマ
+class VerifyResponse(BaseModel):
+    message: str
+
 # パスワードリセットリクエストスキーマ
 class PasswordResetRequest(BaseModel):
     username: str
-    elementary_school: str
     new_password: str
 
 # パスワードリセットレスポンススキーマ
