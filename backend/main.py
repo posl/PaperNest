@@ -8,7 +8,8 @@ from backend.api.auth.refresh import router as refresh_router
 from backend.api.auth.get_user_info import router as get_user_info_router
 from backend.api.auth.change_password import router as change_password_router
 from backend.api.auth.delete_user import router as delete_user_router
-from backend.api.auth.reset_password import router as reset_password_router
+from backend.api.auth.reset_password.verify_user import router as verify_user_router
+from backend.api.auth.reset_password.reset_password import router as reset_password_router
 from backend.api.auth.change_user_name import router as change_user_name_router
 from backend.api.db_register.upload_pdf import router as upload_pdf_router
 from backend.api.get_all_papers.get_all_papers import router as get_all_papers_router
@@ -40,6 +41,7 @@ app.include_router(refresh_router)
 app.include_router(get_user_info_router)
 app.include_router(change_password_router)
 app.include_router(delete_user_router)
+app.include_router(verify_user_router)
 app.include_router(reset_password_router)
 app.include_router(change_user_name_router)
 app.include_router(upload_pdf_router)
