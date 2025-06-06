@@ -18,6 +18,7 @@ export const TabScrollArea = ({
   const [showScrollButtons, setShowScrollButtons] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [oldName, setOldName] = useState("");
 
   const scrollLeft = () => {
     tabScrollRef.current?.scrollBy({ left: -150, behavior: 'smooth' });
@@ -61,13 +62,52 @@ export const TabScrollArea = ({
             {editingTabId === tab.id ? (
               <input
                 value={tab.name}
+                onFocus={() => setOldName(tab.name)}
                 onChange={(e) =>
                   setTabs((prevTabs) =>
                     prevTabs.map((t) => (t.id === tab.id ? { ...t, name: e.target.value } : t))
                   )
                 }
-                onBlur={() => tab.name.trim() && setEditingTabId(null)}
-                onKeyDown={(e) => e.key === "Enter" && tab.name.trim() && setEditingTabId(null)}
+                onBlur={async () => {
+                  if (!tab.name.trim()) return;
+                  setEditingTabId(null);
+                  try {
+                    const token = localStorage.getItem("token");
+                    await fetch("http://localhost:8000/research_theme/update", {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        old_research_theme: oldName,
+                        new_research_theme: tab.name.trim(),
+                      }),
+                    });
+                  } catch (err) {
+                    console.error("研究テーマ変更に失敗:", err);
+                  }
+                }}
+                onKeyDown={async (e) => {
+                  if (e.key !== "Enter" || !tab.name.trim()) return;
+                  setEditingTabId(null);
+                  try {
+                    const token = localStorage.getItem("token");
+                    await fetch("http://localhost:8000/research_theme/update", {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        old_research_theme: oldName,
+                        new_research_theme: tab.name.trim(),
+                      }),
+                    });
+                  } catch (err) {
+                    console.error("研究テーマ変更に失敗:", err);
+                  }
+                }}
                 className="border border-gray-300 px-2 py-1 rounded text-sm"
                 autoFocus
               />
@@ -84,7 +124,10 @@ export const TabScrollArea = ({
                   setSelectedTabId(tab.id);
                 }}
                 onContextMenu={(e) => handleContextMenu(e, tab.id)}
-                onDoubleClick={() => setEditingTabId(tab.id)}
+                onDoubleClick={() => {
+                  setOldName(tab.name);
+                  setEditingTabId(tab.id);
+                }}
               >
                 {tab.name}
               </Button>

@@ -24,6 +24,8 @@ export const LandingPage = () => {
     // Tabs state
     const [tabs, setTabs] = useState([]);
     const [selectedTabId, setSelectedTabId] = useState(1);
+    const [editingTabId, setEditingTabId] = useState(null);
+    const [editingOldName, setEditingOldName] = useState("");
 
   const [tableData, setTableData] = useState([]);
 
@@ -244,6 +246,9 @@ export const LandingPage = () => {
           selectedTabId={selectedTabId}
           setSelectedTabId={setSelectedTabId}
           handleAddTab={handleAddTab}
+          editingTabId={editingTabId}
+          setEditingTabId={setEditingTabId}
+          setEditingOldName={setEditingOldName}
         />
         
         {/* Main content */}
@@ -268,9 +273,10 @@ export const LandingPage = () => {
           }`}
         >
             {(() => {
-              const selectedTabName = tabs.find(tab => tab.id === selectedTabId)?.name;
-              const filteredTableData = tableData.filter(paper => paper.category === selectedTabName);
-              console.log("LandingPage: selectedTab:", selectedTabName);
+              const selectedTab = tabs.find(tab => tab.id === selectedTabId);
+              const filterName = (editingTabId === selectedTabId && editingOldName) ? editingOldName : selectedTab?.name;
+              const filteredTableData = tableData.filter(paper => paper.category === filterName);
+              console.log("LandingPage: selectedTab:", filterName);
               console.log("LandingPage: filtered table data:", filteredTableData);
               return (
                 <TableSection
