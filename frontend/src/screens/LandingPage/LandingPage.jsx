@@ -29,6 +29,7 @@ export const LandingPage = () => {
 
   // Move this outside the useEffect
   const fetchPapers = async () => {
+    console.log("LandingPage: fetchPapers called");
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:8000/get_all_papers", {
@@ -42,12 +43,14 @@ export const LandingPage = () => {
       }
 
       const data = await response.json();
+      console.log("LandingPage: fetchPapers received data:", data);
 
       if (!Array.isArray(data)) {
         throw new Error("Response is not an array");
       }
 
       setTableData(data);
+      console.log("LandingPage: tableData set to:", data);
 
       const uniqueCategories = Array.from(new Set(data.map(paper => paper.category))).filter(Boolean);
       const newTabs = uniqueCategories.map((category, index) => ({
@@ -57,6 +60,7 @@ export const LandingPage = () => {
 
       setTabs(newTabs);
       setSelectedTabId(newTabs.length > 0 ? newTabs[0].id : 1);
+      return data;
     } catch (error) {
       console.error("Error fetching papers:", error);
     }
@@ -263,14 +267,22 @@ export const LandingPage = () => {
             isSidebarOpen ? "ml-0" : "w-full"
           }`}
         >
-            <TableSection
-              visibleColumns={visibleColumns}
-              tableData={tableData.filter(paper => paper.category === tabs.find(tab => tab.id === selectedTabId)?.name)}
-              onUpdateRow={handleUpdateRow} // 編集内容を反映する関数を渡す
-              onDelete={tableData}
-              setTableData={setTableData}
-              refreshPapers={fetchPapers}
-            />
+            {(() => {
+              const selectedTabName = tabs.find(tab => tab.id === selectedTabId)?.name;
+              const filteredTableData = tableData.filter(paper => paper.category === selectedTabName);
+              console.log("LandingPage: selectedTab:", selectedTabName);
+              console.log("LandingPage: filtered table data:", filteredTableData);
+              return (
+                <TableSection
+                  visibleColumns={visibleColumns}
+                  tableData={filteredTableData}
+                  onUpdateRow={handleUpdateRow}
+                  onDelete={() => { /* 編集モーダルを閉じる用コールバックを渡す（例: setIsEditModalOpen(false)） */ }}
+                  setTableData={setTableData}
+                  refreshPapers={fetchPapers}
+                />
+              );
+            })()}
             
 
             <ScrollBar

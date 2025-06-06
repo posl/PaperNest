@@ -19,6 +19,8 @@ export const PaperDetailModal = ({
   onDelete,
   isDeleteModalOpen,
   setIsDeleteModalOpen,
+  setTableData,      // added
+  refreshPapers,     // added
 }) => {
   const [isBibtexOpen, setIsBibtexOpen] = useState(false);
   
@@ -64,6 +66,8 @@ export const PaperDetailModal = ({
               onSave={onSave}
               onCancel={onCancelEdit}
               onDelete={() => setIsDeleteModalOpen(true)}
+              setTableData={setTableData}        // added
+              refreshPapers={refreshPapers}      // added
             />
             {isDeleteModalOpen && (
                 <ConfirmDeleteModal

@@ -1,7 +1,21 @@
 import React from "react";
 import { Button } from "./ui/button";
 
-export const EditForm = ({ editedData, handleInputChange, onSave, onCancel, onDelete, setTableData, refreshPapers }) => {
+export const EditForm = ({
+  editedData,
+  handleInputChange,
+  onSave,
+  onCancel,
+  onDelete, // 編集モーダルを閉じるコールバック
+  setTableData,
+  refreshPapers // 論文一覧再取得関数
+}) => {
+  // Log received props to verify
+  console.log("EditForm mounted with props:", {
+    refreshPapers: typeof refreshPapers,
+    setTableData: typeof setTableData,
+    onDelete: typeof onDelete,
+  });
   return (
     <div className="flex flex-col h-full m-4">
       {/* スクロール可能なフォーム部分 */}
@@ -106,16 +120,21 @@ export const EditForm = ({ editedData, handleInputChange, onSave, onCancel, onDe
         >
           キャンセル
         </Button>
-        <Button 
+        <Button
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
           onClick={async () => {
+            // 1. API 呼び出しでデータベースから削除
+            console.log("EditForm: Deleting paper_id:", editedData.paper_id);
             try {
-              const response = await fetch(`http://localhost:8000/papers/delete/${editedData.paper_id}`, {
-                method: "DELETE",
-                headers: {
-                  "Accept": "application/json"
+              const response = await fetch(
+                `http://localhost:8000/papers/delete/${editedData.paper_id}`,
+                {
+                  method: "DELETE",
+                  headers: {
+                    "Accept": "application/json",
+                  },
                 }
-              });
+              );
               if (!response.ok) {
                 const errorData = await response.json();
                 console.error("Failed to delete paper:", errorData);
@@ -123,8 +142,21 @@ export const EditForm = ({ editedData, handleInputChange, onSave, onCancel, onDe
             } catch (error) {
               console.error("Error deleting paper:", error);
             }
+            // 2. 最新の一覧を取得してテーブルを更新
+            if (typeof refreshPapers === "function" && typeof setTableData === "function") {
+              console.log("EditForm: Calling refreshPapers()");
+              try {
+                const refreshed = await refreshPapers();
+                console.log("EditForm: Refreshed data:", refreshed);
+                if (Array.isArray(refreshed)) {
+                  setTableData(refreshed);
+                }
+              } catch (err) {
+                console.error("Error refreshing papers:", err);
+              }
+            }
+            // 3. 編集モーダルを閉じる（親コンポーネントへ通知）
             onDelete();
-            await refreshPapers();
           }}
         >
           削除
@@ -164,7 +196,6 @@ export const EditForm = ({ editedData, handleInputChange, onSave, onCancel, onDe
               }
             }
             onSave(); // existing onSave callback
-            await refreshPapers();
           }}
         >
           保存
