@@ -122,40 +122,8 @@ export const EditForm = ({
         </Button>
         <Button
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-          onClick={async () => {
-            // 1. API 呼び出しでデータベースから削除
-            console.log("EditForm: Deleting paper_id:", editedData.paper_id);
-            try {
-              const response = await fetch(
-                `http://localhost:8000/papers/delete/${editedData.paper_id}`,
-                {
-                  method: "DELETE",
-                  headers: {
-                    "Accept": "application/json",
-                  },
-                }
-              );
-              if (!response.ok) {
-                const errorData = await response.json();
-                console.error("Failed to delete paper:", errorData);
-              }
-            } catch (error) {
-              console.error("Error deleting paper:", error);
-            }
-            // 2. 最新の一覧を取得してテーブルを更新
-            if (typeof refreshPapers === "function" && typeof setTableData === "function") {
-              console.log("EditForm: Calling refreshPapers()");
-              try {
-                const refreshed = await refreshPapers();
-                console.log("EditForm: Refreshed data:", refreshed);
-                if (Array.isArray(refreshed)) {
-                  setTableData(refreshed);
-                }
-              } catch (err) {
-                console.error("Error refreshing papers:", err);
-              }
-            }
-            // 3. 編集モーダルを閉じる（親コンポーネントへ通知）
+          onClick={() => {
+            // ここでは確認ダイアログを開くだけにする
             onDelete();
           }}
         >

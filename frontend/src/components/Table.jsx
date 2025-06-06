@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "./ui/table";
 
-export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdateRow }) => {
+export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdateRow, refreshPapers }) => {
   const [selectedRow, setSelectedRow] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({});
@@ -86,9 +86,11 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
         onSave={saveChanges}
         onCancelEdit={() => setIsEditing(false)}
         onInputChange={handleInputChange}
-        onDelete={() => handleDeleteRow(selectedRow.id)}
+        onDelete={() => handleDeleteRow(selectedRow && selectedRow.id)}
         isDeleteModalOpen={isDeleteModalOpen} // ← ★追加
         setIsDeleteModalOpen={setIsDeleteModalOpen} // ← ★追加
+        setTableData={setTableData}
+        refreshPapers={refreshPapers}
       />
 
 

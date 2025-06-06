@@ -71,12 +71,12 @@ export const PaperDetailModal = ({
             />
             {isDeleteModalOpen && (
                 <ConfirmDeleteModal
-                isOpen={isDeleteModalOpen}
-                onCancel={() => setIsDeleteModalOpen(false)}
-                onConfirm={() => {
-                    onDelete(); // ← handleDeleteRow() を呼び出す
-                    setIsDeleteModalOpen(false);
-                }}
+                  isOpen={isDeleteModalOpen}
+                  onCancel={() => setIsDeleteModalOpen(false)}
+                  selectedRow={selectedRow}
+                  refreshPapers={refreshPapers}
+                  setTableData={setTableData}
+                  onCloseDetail={onClose}
                 />
             )}
             

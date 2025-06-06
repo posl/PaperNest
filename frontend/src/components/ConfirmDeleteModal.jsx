@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "./ui/button";
 import { Icon } from '@iconify/react';
 
-export const ConfirmDeleteModal = ({ isOpen, onCancel, onConfirm }) => {
+export const ConfirmDeleteModal = ({ isOpen, onCancel, selectedRow, refreshPapers, setTableData, onCloseDetail }) => {
   if (!isOpen) return null;
 
   return (
@@ -24,7 +24,39 @@ export const ConfirmDeleteModal = ({ isOpen, onCancel, onConfirm }) => {
         </Button>
         <Button
             className="bg-neutral-800 text-white hover:bg-neutral-700 px-4 py-2 rounded-md"
-            onClick={onConfirm}
+            onClick={async () => {
+              // 1. API で削除
+              console.log("ConfirmDeleteModal: deleting", selectedRow && selectedRow.paper_id);
+              try {
+                const token = localStorage.getItem("token");
+                const response = await fetch(
+                  `http://localhost:8000/papers/delete/${selectedRow.paper_id}`,
+                  {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` },
+                  }
+                );
+                if (!response.ok) {
+                  console.error("Failed to delete paper:", await response.text());
+                }
+              } catch (error) {
+                console.error("Error deleting paper:", error);
+              }
+              // 2. 一覧を再取得して更新
+              if (typeof refreshPapers === "function" && typeof setTableData === "function") {
+                console.log("ConfirmDeleteModal: refreshing papers");
+                const refreshed = await refreshPapers();
+                if (Array.isArray(refreshed)) {
+                  setTableData(refreshed);
+                }
+              }
+              // 3. 親の詳細モーダルを閉じる
+              if (typeof onCloseDetail === "function") {
+                onCloseDetail();
+              }
+              // 4. この ConfirmDeleteModal を閉じる
+              onCancel();
+            }}
         >
             削除する
         </Button>
