@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "./ui/button";
 
-export const EditForm = ({ editedData, handleInputChange, onSave, onCancel, onDelete }) => {
+export const EditForm = ({ editedData, handleInputChange, onSave, onCancel, onDelete, setTableData, refreshPapers }) => {
   return (
     <div className="flex flex-col h-full m-4">
       {/* スクロール可能なフォーム部分 */}
@@ -22,8 +22,8 @@ export const EditForm = ({ editedData, handleInputChange, onSave, onCancel, onDe
           <label className="block font-bold mb-2">Author:</label>
           <input
             type="text"
-            name="author"
-            value={editedData.author || ""}
+            name="authors"
+            value={editedData.authors || ""}
             onChange={handleInputChange}
             className="w-full p-2 border border-gray-300 rounded"
           />
@@ -55,8 +55,8 @@ export const EditForm = ({ editedData, handleInputChange, onSave, onCancel, onDe
           <label className="block font-bold mb-2">Core-rank:</label>
           <input
             type="text"
-            name="core-rank"
-            value={editedData["core-rank"] || ""}
+            name="core_rank"
+            value={editedData["core_rank"] || ""}
             onChange={handleInputChange}
             className="w-full p-2 border border-gray-300 rounded"
           />
@@ -108,13 +108,64 @@ export const EditForm = ({ editedData, handleInputChange, onSave, onCancel, onDe
         </Button>
         <Button 
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-          onClick={onDelete}
+          onClick={async () => {
+            try {
+              const response = await fetch(`http://localhost:8000/papers/delete/${editedData.paper_id}`, {
+                method: "DELETE",
+                headers: {
+                  "Accept": "application/json"
+                }
+              });
+              if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Failed to delete paper:", errorData);
+              }
+            } catch (error) {
+              console.error("Error deleting paper:", error);
+            }
+            onDelete();
+            await refreshPapers();
+          }}
         >
           削除
         </Button>
         <Button
           className="bg-cyan-700 text-white px-4 py-2 rounded hover:bg-cyan-800 transition"
-          onClick={onSave}
+          onClick={async () => {
+            const paperId = editedData.paper_id;
+            for (const [field, value] of Object.entries(editedData)) {
+              if (field === "paper_id") continue;
+
+              let processedValue = value;
+
+              // Convert authors from string to array if needed
+              if (field === "authors" && typeof value === "string") {
+                processedValue = value.split(",").map(s => s.trim()).filter(Boolean);
+              }
+
+              try {
+                const response = await fetch("http://localhost:8000/papers/update", {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    paper_id: paperId,
+                    field: field,
+                    value: processedValue,
+                  }),
+                });
+
+                if (!response.ok) {
+                  console.error(`Failed to update field "${field}"`);
+                }
+              } catch (error) {
+                console.error(`Error updating field "${field}":`, error);
+              }
+            }
+            onSave(); // existing onSave callback
+            await refreshPapers();
+          }}
         >
           保存
         </Button>

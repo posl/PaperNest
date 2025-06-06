@@ -102,20 +102,36 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
             <Table className="min-w-full">
               <TableHeader>
                 <TableRow className="bg-[#f7faff] h-[56px]">
-                  {visibleColumns.map((col) => (
-                    <TableHead
-                      key={col.id}
-                      onClick={() => handleSort(col.id)}
-                      className="px-4 py-3 text-left text-gray-700 font-semibold tracking-wide cursor-pointer select-none hover:text-sky-700"
-                    >
-                      {col.label}
-                      {sortColumn === col.id && (
-                        <span className="ml-1">
-                          {sortOrder === "asc" ? "▲" : "▼"}
-                        </span>
-                      )}
-                    </TableHead>
-                  ))}
+                  {visibleColumns.map((col) =>
+                    col.id === "core-rank" ? (
+                      <TableHead
+                        key={col.id}
+                        onClick={() => handleSort(col.id)}
+                        className="px-4 py-3 text-left text-gray-700 font-semibold tracking-wide cursor-pointer select-none hover:text-sky-700"
+                        style={{ whiteSpace: "nowrap" }}
+                      >
+                        {col.label}
+                        {sortColumn === col.id && (
+                          <span className="ml-1">
+                            {sortOrder === "asc" ? "▲" : "▼"}
+                          </span>
+                        )}
+                      </TableHead>
+                    ) : (
+                      <TableHead
+                        key={col.id}
+                        onClick={() => handleSort(col.id)}
+                        className="px-4 py-3 text-left text-gray-700 font-semibold tracking-wide cursor-pointer select-none hover:text-sky-700"
+                      >
+                        {col.label}
+                        {sortColumn === col.id && (
+                          <span className="ml-1">
+                            {sortOrder === "asc" ? "▲" : "▼"}
+                          </span>
+                        )}
+                      </TableHead>
+                    )
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-gray-200">
@@ -153,7 +169,7 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
               <Button
                 className="bg-[#aac2de] text-white px-3 py-2 rounded-md text-sm shadow-md hover:bg-[#90b4d4] will-change-transform hover:scale-105 transform-gpu hover:brightness-105 transition-all"
                 onClick={() => {
-                  if (row.pdf) window.open(row.pdf, "_blank");
+                  if (row.pdf_url) window.open(row.pdf_url, "_blank");
                   else alert("PDFのURLが設定されていません");
                 }}
               >

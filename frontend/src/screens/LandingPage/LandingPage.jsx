@@ -14,55 +14,74 @@ export const LandingPage = () => {
   // Filter options data
   const filterOptions = [
     { id: "title", label: "title" },
-    { id: "author", label: "author" },
+    { id: "authors", label: "authors" },
     { id: "year", label: "year" },
     { id: "conference", label: "conference" },
-    { id: "core-rank", label: "core-rank" },
+    { id: "core_rank", label: "core-rank" },
     { id: "book", label: "book" },
   ];
 
     // Tabs state
-    const [tabs, setTabs] = useState([
-      { id: 1, name: "研究テーマ1" },
-      { id: 2, name: "研究テーマ2" },
-      { id: 3, name: "研究テーマ3" },
-    ]);
+    const [tabs, setTabs] = useState([]);
     const [selectedTabId, setSelectedTabId] = useState(1);
-    const handleAddTab = () => {
-      const nextId = tabs.length + 1;
-      const newTab = { id: nextId, name: `研究テーマ${nextId}` };
-      setTabs([...tabs, newTab]);
-      setSelectedTabId(nextId);
-    };
 
-      // Flat list of all papers with theme field
-  const allPapers = [
-    { id: 1, title: "example1", author: "John Doe", year: "2021", theme: 1 , pdf: "https://example.com/paper1.pdf", bibtex:"@article{example1, author = {John Doe}, title = {example1}, year = {2021}, journal = {Journal of Examples}, volume = {1}, number = {1}, pages = {1-10} }"},
-    { id: 2, title: "example2", author: "Jane Smith", year: "2020", theme: 1 , pdf: "https://example.com/paper2.pdf", bibtex:"@article{example2, author = {Jane Smith}, title = {example2}, year = {2020}, journal = {Journal of Examples}, volume = {1}, number = {1}, pages = {11-20} }"},
-    { id: 3, title: "example3", author: "Author A", year: "2022", theme: 2, pdf: "https://example.com/paper3.pdf", bibtex:"@article{example3, author = {Author A}, title = {example3}, year = {2022}, journal = {Journal of Examples}, volume = {1}, number = {1}, pages = {21-30} }"},
-    { id: 4, title: "example4", author: "Author B", year: "2023", theme: 2, pdf: "https://example.com/paper4.pdf", bibtex:"@article{example4, author = {Author B}, title = {example4}, year = {2023}, journal = {Journal of Examples}, volume = {1}, number = {1}, pages = {31-40} }"},
-    { id: 5, title: "example5", author: "Writer X", year: "2018", theme: 3, pdf: "https://example.com/paper5.pdf", bibtex:"@article{example5, author = {Writer X}, title = {example5}, year = {2018}, journal = {Journal of Examples}, volume = {1}, number = {1}, pages = {41-50} }"},
-    { id: 6, title: "example6", author: "Writer Y", year: "2057", theme: 3, pdf: "https://example.com/paper6.pdf", bibtex:"@article{example6, author = {Writer Y}, title = {example6}, year = {2057}, journal = {Journal of Examples}, volume = {1}, number = {1}, pages = {51-60} }"},
-  ];
+  const [tableData, setTableData] = useState([]);
 
-  const [tableData, setTableData] = useState(
-    allPapers.filter((paper) => paper.theme === selectedTabId)
-  );
+  // Move this outside the useEffect
+  const fetchPapers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:8000/get_all_papers", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
+      if (!response.ok) {
+        throw new Error("Failed to fetch papers");
+      }
+
+      const data = await response.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error("Response is not an array");
+      }
+
+      setTableData(data);
+
+      const uniqueCategories = Array.from(new Set(data.map(paper => paper.category))).filter(Boolean);
+      const newTabs = uniqueCategories.map((category, index) => ({
+        id: index + 1,
+        name: category
+      }));
+
+      setTabs(newTabs);
+      setSelectedTabId(newTabs.length > 0 ? newTabs[0].id : 1);
+    } catch (error) {
+      console.error("Error fetching papers:", error);
+    }
+  };
 
   useEffect(() => {
-    setTableData(allPapers.filter((paper) => paper.theme === selectedTabId));
-  }, [selectedTabId]);
+    fetchPapers();
+  }, []);
 
+
+  const handleAddTab = () => {
+    const nextId = tabs.length + 1;
+    const newTab = { id: nextId, name: `研究テーマ${nextId}` };
+    setTabs([...tabs, newTab]);
+    setSelectedTabId(nextId);
+  };
 
   // Table columns
   const columns = [
     { id: "title", label: "title" },
-    { id: "author", label: "author" },
+    { id: "authors", label: "author" },
     { id: "year", label: "year" },
     { id: "conference", label: "conference" },
-    { id: "core-rank", label: "core-rank" }, 
-    { id: "book", label: "book" }, 
+    { id: "core_rank", label: "core_rank" },
+    { id: "book", label: "book" },
   ];
 
   // PDF data
@@ -88,11 +107,14 @@ export const LandingPage = () => {
     handleDrop,
   } = useLandingPageState(columns);
 
-  // 編集内容を反映する関数
+  // 編集内容を反映する関数（paper_idで一致する行のみ更新、重複を防ぐ）
   const handleUpdateRow = (updatedRow) => {
     setTableData((prevData) =>
-      prevData.map((row) => (row.id === updatedRow.id ? updatedRow : row))
+      prevData.map((row) =>
+        row.paper_id === updatedRow.paper_id ? { ...row, ...updatedRow } : row
+      )
     );
+    fetchPapers(); // Re-fetch data after update
   };
 
   //質問ボックス用
@@ -243,10 +265,11 @@ export const LandingPage = () => {
         >
             <TableSection
               visibleColumns={visibleColumns}
-              tableData={tableData}
+              tableData={tableData.filter(paper => paper.category === tabs.find(tab => tab.id === selectedTabId)?.name)}
               onUpdateRow={handleUpdateRow} // 編集内容を反映する関数を渡す
               onDelete={tableData}
               setTableData={setTableData}
+              refreshPapers={fetchPapers}
             />
             
 
