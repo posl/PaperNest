@@ -453,22 +453,22 @@
       }
       - エラー発生時はログイン画面に戻す（？）
 
-### 論文検索（🚨制作途中．ユーザ認証機能が未実装）
+### 論文検索
 
   - エンドポイント: POST /search
   - 説明: プロンプトを投げ，類似した論文を返す
-  - ユーザ認証: いらない（将来的にはいる）
+  - ユーザ認証: いる
 
   - リクエスト
     - Content-Type: application/json
       {
         "question": "string",
         "lang": "string",
-        🚨"category: "string"（将来的には実装）
+        "category: "string"
       }
       - question: プロンプト
       - lang: 質問の言語
-      - 🚨category: 研究テーマ名（将来的には実装）
+      - category: 研究テーマ名
 
   - レスポンス
     - 成功時

@@ -116,7 +116,7 @@ class PDFQuestionResponseSchema(BaseModel):
 class VectorSearchRequestSchema(BaseModel):
     question: str
     lang: str = Field(description="ユーザが使用した言語(ja または en)")
-
+    category: str
 
 # ベクトル検索の応答用スキーマ
 class VectorSearchResponseSchema(BaseModel):

@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from langchain.indexes.vectorstore import VectorStoreIndexWrapper
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
@@ -9,7 +9,8 @@ from langchain_groq import ChatGroq
 
 from backend.config import EMBEDDINGS_MODEL, VECTOR_STORE_DIR
 from backend.database.database import SessionLocal
-from backend.models.models import Paper
+from backend.models.models import Paper, User
+from backend.utils.security import get_current_user
 from backend.schema.schema import (
     VectorSearchRequestSchema,
     VectorSearchResponseSchema,
@@ -33,7 +34,7 @@ if VECTOR_STORE_DIR.exists():
     )
 
 
-def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int):
+def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int, user_id: int, category: str):
     vectorstoreindex = VectorStoreIndexWrapper(vectorstore=vectorstore)
     answer = vectorstoreindex.query(query, llm)
     print(f"Answer: {answer}")
@@ -44,7 +45,11 @@ def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int):
     for sentence in answer.split("\n"):
         if len(results) >= k:
             break
-        for res, score in vectorstore.similarity_search_with_score(sentence, k=k):
+        filter = {
+            "user_id": user_id,
+            "category": category,
+        }
+        for res, score in vectorstore.similarity_search_with_score(sentence, k=k, filter=filter):
             if len(results) >= k:
                 break
             paper_id = res.metadata["source"]
@@ -81,11 +86,17 @@ def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int):
 
 # PDF検索質問を受け取り，類似したPDFを返す
 @router.post("/search", response_model=list[VectorSearchResponseSchema])
-async def vector_search(query: VectorSearchRequestSchema):
+async def vector_search(query: VectorSearchRequestSchema,
+                        current_user: User = Depends(get_current_user)
+                        ):
+    user_id = current_user.id
+    category = query.category
     question = query.question
     return ask_llm(
         query=question,
         vectorstore=vector_store,
         llm=llm,
         k=5,
+        user_id=user_id,
+        category=category
     )

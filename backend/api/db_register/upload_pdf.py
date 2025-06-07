@@ -92,13 +92,16 @@ def split_pdf_text(pdf_text: str) -> list:
 
 
 # テキストを埋め込みベクトルに変換
-def embedding_text(splited_text: list, pdf_id: str) -> FAISS:
-    # embeddings = HuggingFaceEmbeddings(
-    #     model_name="oshizo/sbert-jsnli-luke-japanese-base-lite"
-    # )
-    # metadataにPDFのURLを追加
+def embedding_text(splited_text: list, pdf_id: str, user_id: int, category: str) -> FAISS:
     documents = [
-        Document(page_content=text, metadata={"source": pdf_id})
+        Document(
+            page_content=text,
+            metadata={
+                "source": pdf_id,
+                "user_id": user_id,
+                "category": category
+            }
+        )
         for text in splited_text
     ]
     index = FAISS.from_documents(documents, embedding=embeddings)
@@ -146,7 +149,7 @@ def calculate_first_page_hash(pdf_bytes: bytes) -> str:
     return hash_value
 
 
-def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
+def analyze_pdf_from_bytes(pdf_bytes: bytes, user_id: int, category: str) -> Dict[str, str]:
     # PDFを保存
     pdf_id = str(uuid.uuid4())
     pdf_url = f"{BASE_URL}/uploaded/{pdf_id}.pdf"
@@ -159,7 +162,7 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes) -> Dict[str, str]:
 
     pdf_text = read_text_from_pdf(str(copy_pdf_path))
     splited_txt = split_pdf_text(pdf_text)
-    index = embedding_text(splited_txt, pdf_id)
+    index = embedding_text(splited_txt, pdf_id, user_id, category)
     retriever = get_retriever(index)
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
 
@@ -219,7 +222,7 @@ async def upload_pdf(
         raise HTTPException(status_code=409, detail="このPDFはすでに登録されています．")
 
     # PDFのタイトルと要約を取得
-    pdf_info = analyze_pdf_from_bytes(pdf_bytes)
+    pdf_info = analyze_pdf_from_bytes(pdf_bytes, current_user.id, category)
     # print(pdf_info)
     title = pdf_info["title"]
     print(f"PDF Title: {title}")
