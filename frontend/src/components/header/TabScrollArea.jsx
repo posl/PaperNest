@@ -13,6 +13,7 @@ export const TabScrollArea = ({
   setEditingTabId,
   handleAddTab,
   tabRefs,
+  onRenameCategory,
 }) => {
   const tabScrollRef = useRef(null);
   const [showScrollButtons, setShowScrollButtons] = useState(false);
@@ -69,8 +70,8 @@ export const TabScrollArea = ({
                   )
                 }
                 onBlur={async () => {
+                  console.log("TabScrollArea: onBlur rename start. Tab ID:", tab.id, "oldName:", oldName, "newName:", tab.name);
                   if (!tab.name.trim()) return;
-                  setEditingTabId(null);
                   try {
                     const token = localStorage.getItem("token");
                     await fetch("http://localhost:8000/research_theme/update", {
@@ -84,13 +85,16 @@ export const TabScrollArea = ({
                         new_research_theme: tab.name.trim(),
                       }),
                     });
+                    console.log("TabScrollArea: onBlur API call succeeded for Tab ID", tab.id);
+                    onRenameCategory(oldName, tab.name.trim());
                   } catch (err) {
                     console.error("研究テーマ変更に失敗:", err);
                   }
+                  setEditingTabId(null);
                 }}
                 onKeyDown={async (e) => {
+                  console.log("TabScrollArea: onKeyDown Enter rename start. Tab ID:", tab.id, "oldName:", oldName, "newName:", tab.name);
                   if (e.key !== "Enter" || !tab.name.trim()) return;
-                  setEditingTabId(null);
                   try {
                     const token = localStorage.getItem("token");
                     await fetch("http://localhost:8000/research_theme/update", {
@@ -104,9 +108,12 @@ export const TabScrollArea = ({
                         new_research_theme: tab.name.trim(),
                       }),
                     });
+                    console.log("TabScrollArea: onKeyDown API call succeeded for Tab ID", tab.id);
+                    onRenameCategory(oldName, tab.name.trim());
                   } catch (err) {
                     console.error("研究テーマ変更に失敗:", err);
                   }
+                  setEditingTabId(null);
                 }}
                 className="border border-gray-300 px-2 py-1 rounded text-sm"
                 autoFocus

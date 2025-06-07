@@ -5,7 +5,7 @@ import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 import { TabScrollArea } from "./header/TabScrollArea";
 import { UserMenu } from "./header/UserMenu";
 
-export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId, setSelectedTabId, handleAddTab }) => {
+export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId, setSelectedTabId, handleAddTab, onRenameCategory }) => {
   const [editingTabId, setEditingTabId] = useState(null);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, tabId: null });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -32,7 +32,19 @@ export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId
     setContextMenu({ visible: false, x: 0, y: 0, tabId: null });
   };
 
-  const handleConfirmDeleteTab = () => {
+  const handleConfirmDeleteTab = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const tabToDelete = tabs.find(t => t.id === tabIdToDelete);
+      if (tabToDelete) {
+        await fetch(`http://localhost:8000/delete/${encodeURIComponent(tabToDelete.name)}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+    } catch (err) {
+      console.error("タブ削除エラー:", err);
+    }
     setTabs((prevTabs) => prevTabs.filter((t) => t.id !== tabIdToDelete));
     if (selectedTabId === tabIdToDelete && tabs.length > 1) {
       setSelectedTabId(tabs[0].id);
@@ -78,6 +90,7 @@ export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId
           setEditingTabId={setEditingTabId}
           handleAddTab={handleAddTab}
           tabRefs={tabRefs}
+          onRenameCategory={onRenameCategory}
         />
 
         {/* 右側アバターメニュー */}
@@ -110,6 +123,7 @@ export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId
 
       <ConfirmDeleteModal
         isOpen={isDeleteModalOpen}
+        message="このタブを削除してもよろしいですか？"
         onCancel={() => setIsDeleteModalOpen(false)}
         onConfirm={handleConfirmDeleteTab}
       />

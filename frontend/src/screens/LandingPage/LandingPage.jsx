@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
 import { ScrollArea, ScrollBar } from "../../components/ui/scroll-area";
 import { Header } from "../../components/Header"
 import { Sidebar } from "../../components/Sidebar";
@@ -61,7 +62,9 @@ export const LandingPage = () => {
       }));
 
       setTabs(newTabs);
-      setSelectedTabId(newTabs.length > 0 ? newTabs[0].id : 1);
+      console.log("LandingPage: tabs updated to", newTabs);
+      console.log("LandingPage: selectedTabId currently", selectedTabId);
+      // setSelectedTabId(newTabs.length > 0 ? newTabs[0].id : 1); // removed as per instruction
       return data;
     } catch (error) {
       console.error("Error fetching papers:", error);
@@ -69,8 +72,27 @@ export const LandingPage = () => {
   };
 
   useEffect(() => {
-    fetchPapers();
+    const init = async () => {
+      const data = await fetchPapers();
+      if (Array.isArray(data)) {
+        const categories = Array.from(new Set(data.map(p => p.category))).filter(Boolean);
+        const initialTabs = categories.map((category, index) => ({
+          id: index + 1,
+          name: category
+        }));
+        setSelectedTabId(initialTabs.length > 0 ? initialTabs[0].id : 1);
+      }
+    };
+    init();
   }, []);
+
+  // Refresh table data when a tab rename completes
+  useEffect(() => {
+    console.log("LandingPage: editingTabId changed to", editingTabId);
+    if (editingTabId === null) {
+      fetchPapers();
+    }
+  }, [editingTabId]);
 
 
   const handleAddTab = () => {
@@ -123,9 +145,34 @@ export const LandingPage = () => {
     fetchPapers(); // Re-fetch data after update
   };
 
+  // Update in-memory category names after rename
+  const handleRenameCategory = (oldName, newName) => {
+    console.log("LandingPage: handleRenameCategory called with", oldName, newName);
+    // Update table data
+    setTableData(prev => {
+      const updated = prev.map(row =>
+        row.category === oldName ? { ...row, category: newName } : row
+      );
+      console.log("LandingPage: tableData updated to", updated);
+      return updated;
+    });
+    // Update tabs list
+    setTabs(prev => {
+      const updatedTabs = prev.map(tab =>
+        tab.name === oldName ? { ...tab, name: newName } : tab
+      );
+      console.log("LandingPage: tabs updated to", updatedTabs);
+      return updatedTabs;
+    });
+  };
+
   //質問ボックス用
   const [modalOpen, setModalOpen] = useState(false);
   const [recommendedPapers, setRecommendedPapers] = useState([]);
+
+  // 論文削除用モーダル状態
+  const [isDeletePaperModalOpen, setIsDeletePaperModalOpen] = useState(false);
+  const [paperIdToDelete, setPaperIdToDelete] = useState(null);
 
   // --- 質問した時に帰ってきた仮の論文DB ---
   const paperDatabase = [
@@ -228,6 +275,26 @@ export const LandingPage = () => {
     return [1, 2, 3, 4, 5];
   };
 
+  // 論文削除リクエストハンドラ
+  const handleRequestDeletePaper = (paperId) => {
+    setPaperIdToDelete(paperId);
+    setIsDeletePaperModalOpen(true);
+  };
+  // 論文削除確定ハンドラ
+  const handleConfirmDeletePaper = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`http://localhost:8000/papers/delete/${paperIdToDelete}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const refreshed = await fetchPapers();
+      if (Array.isArray(refreshed)) setTableData(refreshed);
+    } catch (err) {
+      console.error("論文削除エラー:", err);
+    }
+    setIsDeletePaperModalOpen(false);
+  };
   
 
   return (
@@ -249,6 +316,7 @@ export const LandingPage = () => {
           editingTabId={editingTabId}
           setEditingTabId={setEditingTabId}
           setEditingOldName={setEditingOldName}
+          onRenameCategory={handleRenameCategory}
         />
         
         {/* Main content */}
@@ -283,7 +351,7 @@ export const LandingPage = () => {
                   visibleColumns={visibleColumns}
                   tableData={filteredTableData}
                   onUpdateRow={handleUpdateRow}
-                  onDelete={() => { /* 編集モーダルを閉じる用コールバックを渡す（例: setIsEditModalOpen(false)） */ }}
+                  onDelete={(row) => handleRequestDeletePaper(row.paper_id)}
                   setTableData={setTableData}
                   refreshPapers={fetchPapers}
                 />
@@ -321,6 +389,14 @@ export const LandingPage = () => {
          isPdfOpen={isPdfOpen}
          setIsPdfOpen={setIsPdfOpen}
          isDragging={isDragging}/>
+
+        {/* 論文削除確認モーダル */}
+        <ConfirmDeleteModal
+          isOpen={isDeletePaperModalOpen}
+          message="この論文を削除してもよろしいですか？"
+          onCancel={() => setIsDeletePaperModalOpen(false)}
+          onConfirm={handleConfirmDeletePaper}
+        />
 
       </div>
     </div>

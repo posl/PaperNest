@@ -24,6 +24,24 @@ export const PaperDetailModal = ({
 }) => {
   const [isBibtexOpen, setIsBibtexOpen] = useState(false);
   
+  // 論文削除確定ハンドラ
+  const handleConfirmDeleteFromEdit = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`http://localhost:8000/papers/delete/${selectedRow.paper_id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const refreshed = await refreshPapers();
+      if (Array.isArray(refreshed)) {
+        setTableData(refreshed);
+      }
+    } catch (err) {
+      console.error("論文削除エラー:", err);
+    }
+    setIsDeleteModalOpen(false);
+    onClose();
+  };
 
   if (!selectedRow) return null;
 
@@ -70,14 +88,12 @@ export const PaperDetailModal = ({
               refreshPapers={refreshPapers}      // added
             />
             {isDeleteModalOpen && (
-                <ConfirmDeleteModal
-                  isOpen={isDeleteModalOpen}
-                  onCancel={() => setIsDeleteModalOpen(false)}
-                  selectedRow={selectedRow}
-                  refreshPapers={refreshPapers}
-                  setTableData={setTableData}
-                  onCloseDetail={onClose}
-                />
+              <ConfirmDeleteModal
+                isOpen={isDeleteModalOpen}
+                message="この論文を削除してもよろしいですか？"
+                onCancel={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleConfirmDeleteFromEdit}
+              />
             )}
             
           </div>
