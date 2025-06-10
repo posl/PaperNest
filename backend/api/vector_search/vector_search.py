@@ -49,7 +49,7 @@ def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int):
         for res, score in vectorstore.similarity_search_with_score(sentence, k=k):
             if len(results) >= k:
                 break
-            paper_id = res.metadata["source"]
+            paper_id = res.metadata["paper_id"]
             # paper_idが重複しないようにする
             if paper_id in paper_ids:
                 continue
