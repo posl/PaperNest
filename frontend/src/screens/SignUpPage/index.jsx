@@ -20,66 +20,79 @@ export default function SignUpPage() {
 
   const handleSignUp = async () => {
     if (!username || !schoolName || !password || !confirmPassword) {
-        setErrorMessage("すべての項目を入力してください。");
-        return;
-      }
-
+      setErrorMessage("すべての項目を入力してください。未入力の欄があるかご確認ください。");
+      return;
+    }
+  
     if (!isValidPassword(password)) {
       setErrorMessage("パスワードは6文字以上の半角英数字で入力してください。");
       return;
     }
-
+  
     if (password !== confirmPassword) {
-      setErrorMessage("パスワードが一致しません。");
+      setErrorMessage("パスワードが一致しません。もう一度確認してください。");
       return;
     }
-    // 🔍 ユーザー名の重複チェック
+  
     try {
-        const res = await fetch("http://localhost:8000/register/user", {
+      const res = await fetch("http://localhost:8000/register/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username,
+          elementary_school: schoolName,
+          password,
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        if (res.status === 400) {
+          setErrorMessage(data.detail || "このユーザー名はすでに使用されています。");
+        } else if (res.status === 422) {
+          const firstError = data?.detail?.[0]?.msg || "入力に誤りがあります。";
+          setErrorMessage(firstError);
+        } else {
+          setErrorMessage("登録中に問題が発生しました。しばらくして再試行してください。");
+        }
+        return;
+      }
+  
+      // 🎉 成功時の処理
+      setErrorMessage("");
+      setSuccessMessage("✅ アカウント登録が完了しました！ホームに移動します。");
+      try {
+        const loginRes = await fetch("http://localhost:8000/login", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username,
-            elementary_school: schoolName, // ← APIに合わせる
-            password,
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            username: username,
+            password: password,
           }),
         });
       
-        const data = await res.json();
+        if (!loginRes.ok) throw new Error("自動ログインに失敗しました");
       
-        if (!res.ok) {
-          if (res.status === 400) {
-            // 重複ユーザー名のエラーメッセージ
-            setErrorMessage(data.detail || "登録に失敗しました。");
-          } else if (res.status === 422) {
-            // バリデーションエラー
-            const firstError = data?.detail?.[0]?.msg || "入力に誤りがあります。";
-            setErrorMessage(firstError);
-          } else {
-            setErrorMessage("登録中に問題が発生しました。");
-          }
-          return;
-        }
-      
-        // 成功時
-        // 成功時
-        setSuccessMessage("✅ アカウント登録が完了しました！ログイン状態でホームに移動します。");
-        setTimeout(() => {
+        const loginData = await loginRes.json();
+        localStorage.setItem("token", loginData.access_token);
         setIsAuthenticated(true);
-        navigate("/app");
-        }, 2000);
-        console.log("登録成功:", data);
-        setIsAuthenticated(true);
-        navigate("/app");
-      } catch (err) {
-        setErrorMessage("サーバーに接続できませんでした。");
+        navigate("/app", { replace: true });
+      } catch (loginErr) {
+        console.error("ログイン失敗:", loginErr);
+        setErrorMessage("ログイン処理に失敗しました。再度ログインしてください。");
       }
-
-    // エラーなし → 登録処理へ
-    setErrorMessage("");
-    console.log("SignUp:", { username, schoolName, password });
-    setIsAuthenticated(true);
-    navigate("/app");
+      
+      setTimeout(() => {
+        setIsAuthenticated(true);
+        navigate("/app", { replace: true });
+      }, 1500);
+      console.log("登録成功:", data);
+    } catch (err) {
+      setErrorMessage("サーバーに接続できませんでした。ネットワークをご確認ください。");
+    }
   };
     // 全角英数字を半角に変換する関数
     const toHalfWidth = (str) =>

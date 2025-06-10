@@ -1,16 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from datetime import timedelta
 
 from backend.database.database import get_db
 from backend.models.models import User
-from backend.utils.security import verify_password, create_access_token
-from backend.schema.schema import Token
+from backend.utils.security import verify_password, create_access_token, create_refresh_token
+from backend.schema.schema import TokenWithRefresh
 
 router = APIRouter()
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=TokenWithRefresh)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
@@ -31,11 +30,8 @@ def login(
             detail="ユーザ名またはパスワードが無効です．"
         )
 
-    # トークンの発行
-    access_token_expires = timedelta(minutes=30)
-    access_token = create_access_token(
-        data={"sub": user.username},
-        expires_delta=access_token_expires
-    )
+    # アクセストークンの生成
+    access_token = create_access_token(data={"sub": user.username})
+    refresh_token = create_refresh_token(data={"sub": user.username})
 
-    return Token(access_token=access_token, token_type="bearer")
+    return TokenWithRefresh(access_token=access_token, refresh_token=refresh_token, token_type="bearer")

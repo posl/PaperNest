@@ -18,4 +18,4 @@ def get_all_papers(
         return response
     except Exception as e:
         print(f"データベースからの取得中にエラーが発生しました: {e}")
-        raise HTTPException(status_code=500, detail="データの取得中にエラーが発生しました")
+        raise HTTPException(status_code=500, detail="データの取得中にエラーが発生しました．")

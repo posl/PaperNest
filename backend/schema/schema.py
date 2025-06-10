@@ -16,6 +16,16 @@ class UserOut(BaseModel):
     class Config:
         orm_mode = True
 
+# ユーザ認証リフレッシュトークン付きトークンスキーマ
+class TokenWithRefresh(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str
+
+# リフレッシュリクエストスキーマ
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
 # ユーザ認証トークンスキーマ
 class Token(BaseModel):
     access_token: str
@@ -30,9 +40,18 @@ class PasswordChangeRequest(BaseModel):
 class PasswordChangeResponse(BaseModel):
     message: str
 
+# パスワードリセット用認証リクエストスキーマ
+class VerifyRequest(BaseModel):
+    username: str
+    elementary_school: str
+
+# パスワードリセット用認証レスポンススキーマ
+class VerifyResponse(BaseModel):
+    message: str
+
 # パスワードリセットリクエストスキーマ
 class PasswordResetRequest(BaseModel):
-    elementary_school: str
+    username: str
     new_password: str
 
 # パスワードリセットレスポンススキーマ
@@ -97,7 +116,7 @@ class PDFQuestionResponseSchema(BaseModel):
 class VectorSearchRequestSchema(BaseModel):
     question: str
     lang: str = Field(description="ユーザが使用した言語(ja または en)")
-
+    category: str
 
 # ベクトル検索の応答用スキーマ
 class VectorSearchResponseSchema(BaseModel):

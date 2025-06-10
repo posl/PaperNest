@@ -116,7 +116,7 @@ def fetch_metadata_from_openalex(title: str, similarity_threshold: float) -> dic
     except httpx.RequestError as e:
         return {"error": f"OpenAlex request failed: {e}"}
 
-def fetch_metadata_from_title(title: str, similarity_threshold=0.93) -> dict:
+def fetch_metadata_from_title(title: str, similarity_threshold=0.95) -> dict:
     params = {
         "query.title": title,
         "rows": 5,

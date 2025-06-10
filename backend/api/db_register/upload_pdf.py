@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 from backend.api.db_register.db_register import register_paper
 from backend.api.db_register.get_pdf_title import get_pdf_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
-from backend.config import BASE_URL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR, CHAT_MODEL
+from backend.config import BASE_URL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
 from backend.database.database import get_db
 from backend.models.models import Paper, User
 from backend.schema.schema import PaperSchema, UploadPDFResponseSchema
@@ -89,10 +89,16 @@ def split_pdf_text(pdf_text: str) -> list:
 
 
 # テキストを埋め込みベクトルに変換
-def embedding_text(splited_text: list, pdf_id: str) -> FAISS:
-    # metadataとしてcategory, pdf_idを追加
+def embedding_text(splited_text: list, pdf_id: str, user_id: int, category: str) -> FAISS:
     documents = [
-        Document(page_content=text, metadata={"paper_id": pdf_id})
+        Document(
+            page_content=text,
+            metadata={
+                "source": pdf_id,
+                "user_id": user_id,
+                "category": category
+            }
+        )
         for text in splited_text
     ]
     index = FAISS.from_documents(documents, embedding=embeddings)
@@ -135,9 +141,8 @@ def calculate_first_page_hash(pdf_bytes: bytes) -> str:
     return hash_value
 
 
-# PDFからタイトルを取得し，要約を生成
-def analyze_pdf_from_bytes(pdf_bytes: bytes, vector_store_dir: Path) -> Dict[str, str]:
-    # 閲覧用のPDFを保存
+def analyze_pdf_from_bytes(pdf_bytes: bytes, user_id: int, category: str) -> Dict[str, str]:
+    # PDFを保存
     pdf_id = str(uuid.uuid4())
     pdf_url = f"{BASE_URL}/uploaded/{pdf_id}.pdf"
     copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
@@ -148,7 +153,7 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes, vector_store_dir: Path) -> Dict[str
 
     pdf_text = read_text_from_pdf(copy_pdf_path)
     splited_txt = split_pdf_text(pdf_text)
-    index = embedding_text(splited_txt, pdf_id)
+    index = embedding_text(splited_txt, pdf_id, user_id, category)
     retriever = get_retriever(index)
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
 
@@ -211,7 +216,8 @@ async def upload_pdf(
         raise HTTPException(status_code=409, detail="このPDFはすでに登録されています．")
 
     # PDFのタイトルと要約を取得
-    pdf_info = analyze_pdf_from_bytes(pdf_bytes, each_vector_store_dir)
+    pdf_info = analyze_pdf_from_bytes(pdf_bytes, current_user.id, category)
+    # print(pdf_info)
     title = pdf_info["title"]
     print(f"PDF Title: {title}")
 
@@ -287,13 +293,13 @@ async def upload_pdf(
             failed_info = ", ".join(missing_fields)
             response = UploadPDFResponseSchema(
                 success=False,
-                message=f"{failed_info} の取得に失敗しました。",
+                message=f"{failed_info} の取得に失敗しました．",
                 data=final_data,
             )
         else:
             response = UploadPDFResponseSchema(
                 success=True,
-                message="PDFの登録が完了しました。",
+                message="PDFの登録が完了しました．",
                 data=final_data,
             )
 
