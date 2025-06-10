@@ -35,6 +35,7 @@ wheels/
 .venv
 .env
 .python-version
+.devcontainer/Docker/backend/.env
 
 # development
 notebooks/

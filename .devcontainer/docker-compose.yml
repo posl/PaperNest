@@ -1,0 +1,30 @@
+services:
+  backend:
+    container_name: paper-nest-backend
+    build:
+      context: .
+      dockerfile: Docker/backend/Dockerfile
+    working_dir: /workspace/backend
+    ports:
+      - 8000:8000
+    volumes:
+      - ..:/workspace
+    env_file:
+      - Docker/backend/.env  # パスを修正
+
+  frontend:
+    container_name: paper-nest-frontend
+    build:
+      args:
+        - NODE_VER=20.10.0
+      context: .
+      dockerfile: Docker/frontend/Dockerfile
+    working_dir: /workspace/frontend
+    volumes:
+      - ..:/workspace
+      - /workspace/frontend/node_modules
+    ports:
+      - 3000:3000
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0

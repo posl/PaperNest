@@ -1,7 +1,6 @@
 import httpx
 import pandas as pd
 import re
-import difflib
 from difflib import SequenceMatcher
 import os
 
@@ -55,13 +54,17 @@ def fetch_metadata(title: str) -> dict:
 
     return final_metadata, openalex
 
-# タイトルからCrossref APIを使ってメタデータ取得
+
+def preprocess(text: str) -> str:
+    # 英数字のみを抽出（スペースや記号を削除）
+    return re.sub(r'[^a-zA-Z0-9]', '', text.lower())
+
 # 類似度計算（完全一致に近い比較）
 def similarity(t1: str, t2: str) -> float:
-    return SequenceMatcher(None, t1.lower(), t2.lower()).ratio()
+    return SequenceMatcher(None, preprocess(t1), preprocess(t2)).ratio()
 
 # OpenAlex fallback
-def fetch_metadata_from_openalex(title: str) -> dict:
+def fetch_metadata_from_openalex(title: str, similarity_threshold: float) -> dict:
     params = {
         "search": title,
         "per-page": 5
@@ -98,7 +101,7 @@ def fetch_metadata_from_openalex(title: str) -> dict:
                 best_item = item
                 best_score = score
 
-        if best_item:
+        if best_item and best_score >= similarity_threshold:
             return {
                 "title": best_item.get("title"),
                 "authors": [a.get("author", {}).get("display_name", "") for a in best_item.get("authorships", [])],
@@ -113,7 +116,7 @@ def fetch_metadata_from_openalex(title: str) -> dict:
     except httpx.RequestError as e:
         return {"error": f"OpenAlex request failed: {e}"}
 
-def fetch_metadata_from_title(title: str, similarity_threshold=0.93) -> dict:
+def fetch_metadata_from_title(title: str, similarity_threshold=0.95) -> dict:
     params = {
         "query.title": title,
         "rows": 5,
@@ -133,7 +136,7 @@ def fetch_metadata_from_title(title: str, similarity_threshold=0.93) -> dict:
 
         if not items:
             print("No items found in Crossref, using OpenAlex.")
-            return fetch_metadata_from_openalex(title), True
+            return fetch_metadata_from_openalex(title, similarity_threshold), True
 
         best_item = None
         best_score = -1.0
@@ -166,7 +169,7 @@ def fetch_metadata_from_title(title: str, similarity_threshold=0.93) -> dict:
 
         if best_score < similarity_threshold:
             print(f"Low similarity ({best_score}) in Crossref. Trying OpenAlex...")
-            return fetch_metadata_from_openalex(title), True
+            return fetch_metadata_from_openalex(title, similarity_threshold), True
 
         if best_item:
             return {
@@ -216,18 +219,10 @@ def get_core_rank_and_acronym(conference_name: str, entry_type: str) -> tuple[st
         df = pd.read_csv(csv_path)
         titles = df['Title'].dropna().astype(str)
 
-        # Title列を検索して会議名と一致すれば取得
-        matched_row = df[titles.str.lower() == conference_name.lower()]
-        if not matched_row.empty:
-            row = matched_row.iloc[0]
-            return row.get('Rank', 'Unknown'), row.get('Acronym', 'unknown')
-
-        # Titleとの類似度が高いものを取得
-        close_matches = difflib.get_close_matches(conference_name, titles, n=1, cutoff=0.7)
-        if close_matches:
-            best_match = close_matches[0]
-            print(f"[INFO] 類似タイトルでマッチしました: {best_match}")
-            row = df[df['Title'] == best_match].iloc[0]
+        # Title が conference_name に部分一致する行を探す（大文字小文字を無視）
+        matched = titles[titles.apply(lambda t: t.lower() in conference_name.lower())]
+        if not matched.empty:
+            row = df.loc[matched.index[0]]
             return row.get('Rank', 'Unknown'), row.get('Acronym', 'unknown')
         else:
             return "Unknown", "unknown"
@@ -274,7 +269,7 @@ def fetch_bibtex_openalex(metadata: dict) -> str:
     bibtex_id = f"{first_author_surname}{year}"
 
     bibtex_lines = [
-        f"@article{{{bibtex_id},",
+        f"@article{{{bibtex_id}}},",
         f"  title={{{title}}},",
         f"  author={{{bibtex_authors}}},",
         f"  year={{{year}}},"
