@@ -17,7 +17,6 @@ from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
-from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
@@ -37,7 +36,7 @@ load_dotenv()
 groq_api_key = os.environ["GROQ_API_KEY"]
 groq_chat = ChatGroq(
     groq_api_key=groq_api_key,
-    model_name=CHAT_MODEL,
+    model_name="llama3-70b-8192",
 )
 
 system_prompt = "You are a helpful assistant. Please respond based on the content of the paper PDF.\n\n{context}"
@@ -131,6 +130,11 @@ def generate_summary(rag_chain: RunnableBinding) -> str:
     return response["answer"]
 
 
+@router.get("/")
+def read_root():
+    return {"message": "Hello, FastAPI is running!"}
+
+
 # 論文1ページ目からハッシュ値を生成
 def calculate_first_page_hash(pdf_bytes: bytes) -> str:
     """PDFの1ページ目の内容からハッシュ値を生成"""
@@ -149,6 +153,7 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes, user_id: int, category: str) -> Dic
     # PDFを保存
     pdf_id = str(uuid.uuid4())
     pdf_url = f"{BASE_URL}/uploaded/{pdf_id}.pdf"
+
     copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
     if not UPLOAD_DIR.exists():
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
