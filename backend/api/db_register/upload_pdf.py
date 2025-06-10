@@ -1,12 +1,12 @@
 import hashlib
 import os
-from pathlib import Path
 import uuid
 from typing import Dict
 
 import fitz
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -36,7 +36,7 @@ load_dotenv()
 groq_api_key = os.environ["GROQ_API_KEY"]
 groq_chat = ChatGroq(
     groq_api_key=groq_api_key,
-    model_name=CHAT_MODEL,
+    model_name="llama3-70b-8192",
 )
 
 system_prompt = "You are a helpful assistant. Please respond based on the content of the paper PDF.\n\n{context}"
@@ -51,10 +51,13 @@ embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
 
 
 # ベクトルデータベースをロード
-def load_vector_store(vector_store_dir: Path) -> FAISS:
+def load_vector_store() -> FAISS:
+    # embeddings = HuggingFaceEmbeddings(
+    #     model_name="sentence-transformers/all-mpnet-base-v2"
+    # )
     if os.path.exists(VECTOR_STORE_DIR):
         vector_store = FAISS.load_local(
-            vector_store_dir,
+            VECTOR_STORE_DIR,
             embeddings,
             allow_dangerous_deserialization=True,
         )
@@ -127,6 +130,11 @@ def generate_summary(rag_chain: RunnableBinding) -> str:
     return response["answer"]
 
 
+@router.get("/")
+def read_root():
+    return {"message": "Hello, FastAPI is running!"}
+
+
 # 論文1ページ目からハッシュ値を生成
 def calculate_first_page_hash(pdf_bytes: bytes) -> str:
     """PDFの1ページ目の内容からハッシュ値を生成"""
@@ -145,13 +153,14 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes, user_id: int, category: str) -> Dic
     # PDFを保存
     pdf_id = str(uuid.uuid4())
     pdf_url = f"{BASE_URL}/uploaded/{pdf_id}.pdf"
+
     copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
     if not UPLOAD_DIR.exists():
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     with open(copy_pdf_path, "wb") as f:
         f.write(pdf_bytes)
 
-    pdf_text = read_text_from_pdf(copy_pdf_path)
+    pdf_text = read_text_from_pdf(str(copy_pdf_path))
     splited_txt = split_pdf_text(pdf_text)
     index = embedding_text(splited_txt, pdf_id, user_id, category)
     retriever = get_retriever(index)
@@ -159,30 +168,30 @@ def analyze_pdf_from_bytes(pdf_bytes: bytes, user_id: int, category: str) -> Dic
 
     # タイトルを生成
     title = get_pdf_title(str(copy_pdf_path))
-    # if any(
-    #     phrase in title.lower() for phrase in ["unable to extract", "unable to find"]
-    # ):
-    #     title = None
-    # else:
-    #     if (
-    #         "Based on the PDF content" in title
-    #         or "Based on the provided PDF content" in title
-    #     ):
-    #         if "However, I can suggest a possible title:" in title:
-    #             title = title.split("However, I can suggest a possible title:")[
-    #                 -1
-    #             ].strip()
-    #         else:
-    #             title = None  # 適切な提案がなかった場合は None にする
+    if any(
+        phrase in title.lower() for phrase in ["unable to extract", "unable to find"]
+    ):
+        title = None
+    else:
+        if (
+            "Based on the PDF content" in title
+            or "Based on the provided PDF content" in title
+        ):
+            if "However, I can suggest a possible title:" in title:
+                title = title.split("However, I can suggest a possible title:")[
+                    -1
+                ].strip()
+            else:
+                title = None  # 適切な提案がなかった場合は None にする
     # 要約を生成
     summary = generate_summary(rag_chain).replace("Summary: ", "")
 
     # ベクトルデータベースに論文内容を追加
-    vector_store = load_vector_store(vector_store_dir)
+    vector_store = load_vector_store()
     vector_store.merge_from(index)
 
     # ベクトルデータベースを保存
-    vector_store.save_local(vector_store_dir)
+    vector_store.save_local(VECTOR_STORE_DIR)
 
     return {"pdf_id": pdf_id, "pdf_url": pdf_url, "title": title, "summary": summary}
 
@@ -196,9 +205,6 @@ async def upload_pdf(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    user_id = current_user.id
-    # ユーザーごとのベクトルデータベースのディレクトリを作成
-    each_vector_store_dir = VECTOR_STORE_DIR / str(user_id)
 
     # PDFのバリデーション
     if not file.filename.endswith(".pdf"):
@@ -271,7 +277,6 @@ async def upload_pdf(
         # 個別の項目が取得できているかチェック
         missing_fields = []
         if metadata.get("title") is None:
-            metadata["title"] = title
             missing_fields.append("タイトル")
         if metadata.get("authors") is None or not metadata["authors"]:
             missing_fields.append("著者情報")
@@ -305,3 +310,19 @@ async def upload_pdf(
 
     print(response)
     return response
+
+
+# PDFを開く
+@router.get("/uploaded/{paper_id}.pdf")
+async def get_pdf(paper_id: str):
+    pdf_path = UPLOAD_DIR / f"{paper_id}.pdf"
+
+    if not pdf_path.exists():
+        raise HTTPException(status_code=404, detail="PDF not found.")
+
+    return FileResponse(
+        path=pdf_path,
+        media_type="application/pdf",
+        filename=f"{paper_id}.pdf",
+        headers={"Content-Disposition": f"inline; filename={paper_id}.pdf"},
+    )
