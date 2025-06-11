@@ -11,6 +11,7 @@ export const TabScrollArea = ({
   handleContextMenu,
   editingTabId,
   setEditingTabId,
+  setEditingOldName,
   handleAddTab,
   tabRefs,
   onRenameCategory,
@@ -63,7 +64,10 @@ export const TabScrollArea = ({
             {editingTabId === tab.id ? (
               <input
                 value={tab.name}
-                onFocus={() => setOldName(tab.name)}
+                onFocus={() => {
+                  setOldName(tab.name);
+                  setEditingOldName(tab.name);
+                }}
                 onChange={(e) =>
                   setTabs((prevTabs) =>
                     prevTabs.map((t) => (t.id === tab.id ? { ...t, name: e.target.value } : t))
@@ -133,6 +137,7 @@ export const TabScrollArea = ({
                 onContextMenu={(e) => handleContextMenu(e, tab.id)}
                 onDoubleClick={() => {
                   setOldName(tab.name);
+                  setEditingOldName(tab.name);
                   setEditingTabId(tab.id);
                 }}
               >

@@ -376,7 +376,10 @@ export const LandingPage = () => {
         >
             {(() => {
               const selectedTab = tabs.find(tab => tab.id === selectedTabId);
-              const filterName = (editingTabId === selectedTabId && editingOldName) ? editingOldName : selectedTab?.name;
+              // filterNameの定義を指示通りに修正
+              const filterName = (editingTabId === selectedTabId)
+                ? editingOldName
+                : selectedTab?.name;
               const filteredTableData = tableData.filter(paper => paper.category === filterName);
               console.log("LandingPage: selectedTab:", filterName);
               console.log("LandingPage: filtered table data:", filteredTableData);

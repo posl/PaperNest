@@ -5,8 +5,7 @@ import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 import { TabScrollArea } from "./header/TabScrollArea";
 import { UserMenu } from "./header/UserMenu";
 
-export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId, setSelectedTabId, handleAddTab, onRenameCategory }) => {
-  const [editingTabId, setEditingTabId] = useState(null);
+export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId, setSelectedTabId, handleAddTab, onRenameCategory, editingTabId, setEditingTabId, setEditingOldName }) => {
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, tabId: null });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [tabIdToDelete, setTabIdToDelete] = useState(null);
@@ -88,6 +87,7 @@ export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId
           handleContextMenu={handleContextMenu}
           editingTabId={editingTabId}
           setEditingTabId={setEditingTabId}
+          setEditingOldName={setEditingOldName}
           handleAddTab={handleAddTab}
           tabRefs={tabRefs}
           onRenameCategory={onRenameCategory}
