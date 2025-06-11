@@ -4,8 +4,13 @@ import { Icon } from "@iconify/react";
 
 export const UploadingModal = ({ show, message = "論文をアップロードしています...", progress = 0, status = "uploading" }) => {
   const totalSteps = 10;
-  const stepWidth = 28;
-  const currentX = progress * (stepWidth * (totalSteps - 1));
+//   const stepWidth = 28;
+//   const currentX = progress * (stepWidth * (totalSteps - 1));
+  const containerWidth = 300;
+  const turtleOffset = 16; // カメのサイズに合わせて微調整（半分）
+
+  const maxX = containerWidth - turtleOffset;
+  const currentX = progress * maxX;
 
   const statusStyles = {
     uploading: {
@@ -53,8 +58,8 @@ export const UploadingModal = ({ show, message = "論文をアップロードし
             transition={{ duration: 0.3 }}
           >
             {/* 丸足跡 */}
-            <div className="relative h-20 w-[300px] flex items-center">
-              <div className="flex gap-3 w-full justify-between">
+            <div className="relative h-24 w-[300px] flex items-center">
+              <div className="flex gap-3 w-full justify-between pb-2">
                 {[...Array(totalSteps)].map((_, i) => (
                   <span
                     key={i}
@@ -69,12 +74,18 @@ export const UploadingModal = ({ show, message = "論文をアップロードし
               </div>
 
               {/* 亀 */}
-              <motion.div
-                className="absolute -top-8 left-0"
+              {/* <motion.div
+                className="absolute bottom-[56px] left-0"
                 animate={{ x: currentX }}
                 transition={{ duration: 0.2, ease: "easeInOut" }}
                 style={{ transform: "translateX(-50%)" }}
-              >
+              > */}
+              <motion.div
+                className="absolute bottom-[56px] left-0"
+                animate={{ x: currentX }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                style={{ transform: "translateX(-50%)" }}
+                >
                 <Icon
                   icon="file-icons:tortoisesvn"
                   className="text-4xl text-sky-500 drop-shadow"

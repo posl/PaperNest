@@ -440,6 +440,15 @@ export const LandingPage = () => {
           show={isUploading}
           progress={uploadProgress}
           status={uploadStatus}
+          message={
+            uploadStatus === "uploading"
+              ? "論文をアップロードしています..."
+              : uploadStatus === "success"
+              ? "アップロード完了！"
+              : uploadStatus === "duplicate"
+              ? "このPDFはすでに登録されています"
+              : "アップロードに失敗しました"
+          }
         />
       </div>
     </div>
