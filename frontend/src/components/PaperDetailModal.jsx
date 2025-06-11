@@ -46,8 +46,8 @@ export const PaperDetailModal = ({
   if (!selectedRow) return null;
 
   const openPdf = () => {
-    if (selectedRow.pdf) {
-      window.open(selectedRow.pdf, "_blank");
+    if (selectedRow.pdf_url) {
+      window.open(selectedRow.pdf_url, "_blank");
     } else {
       alert("PDFのURLがありません");
     }
@@ -101,18 +101,18 @@ export const PaperDetailModal = ({
           <div className="space-y-4 text-gray-800 px-4">
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
               <p><strong>Title:</strong> {selectedRow.title}</p>
-              <p><strong>Author:</strong> {selectedRow.author || "N/A"}</p>
+              <p><strong>Author:</strong> {selectedRow.authors || "N/A"}</p>
               <p><strong>Year:</strong> {selectedRow.year || "N/A"}</p>
               <p><strong>Conference:</strong> {selectedRow.conference || "N/A"}</p>
-              <p><strong>Core-rank:</strong> {selectedRow["core-rank"] || "N/A"}</p>
-              <p><strong>Book:</strong> {selectedRow.book || "N/A"}</p>
+              <p><strong>Core-rank:</strong> {selectedRow.core_rank || "N/A"}</p>
+              {/* <p><strong>Book:</strong> {selectedRow.book || "N/A"}</p> */}
             </div>
 
             {/* Abstract */}
             <div className="mt-6">
               <p className="font-semibold text-lg mb-1">Abstract:</p>
               <div className="resize-y border p-4 rounded-lg bg-gray-50 text-base whitespace-pre-wrap h-[300px] overflow-y-auto">
-                {selectedRow.abstract || "N/A"}
+                {selectedRow.summary || "N/A"}
               </div>
             </div>
 

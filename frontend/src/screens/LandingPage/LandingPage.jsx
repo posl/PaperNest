@@ -9,6 +9,7 @@ import { FloatingUploadButton } from "../../components/FloatingUploadButton";
 import { useLandingPageState } from "./hooks/useLandingPageState";
 import { ModalPaperList } from "../../components/ModalPaperList";
 import { summary } from "framer-motion/client";
+import { secureFetch } from "../../utils/apiClient"; 
 
 
 export const LandingPage = () => {
@@ -30,20 +31,19 @@ export const LandingPage = () => {
 
   const [tableData, setTableData] = useState([]);
 
+  const currentCategory = tabs.find(tab => tab.id === selectedTabId)?.name || "未分類";
+
   // Move this outside the useEffect
   const fetchPapers = async () => {
     console.log("LandingPage: fetchPapers called");
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8000/get_all_papers", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await secureFetch("http://localhost:8000/get_all_papers");
+      if (!response) return;
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch papers");
-      }
+      // if (!response.ok) {
+      //   throw new Error("Failed to fetch papers");
+      // }
 
       const data = await response.json();
       console.log("LandingPage: fetchPapers received data:", data);
@@ -296,6 +296,7 @@ export const LandingPage = () => {
     setIsDeletePaperModalOpen(false);
   };
   
+  
 
   return (
     <div className="bg-white flex flex-row justify-center w-full"
@@ -388,7 +389,9 @@ export const LandingPage = () => {
         <FloatingUploadButton
          isPdfOpen={isPdfOpen}
          setIsPdfOpen={setIsPdfOpen}
-         isDragging={isDragging}/>
+         isDragging={isDragging}
+         category={currentCategory} 
+         onUploadSuccess={fetchPapers}  />
 
         {/* 論文削除確認モーダル */}
         <ConfirmDeleteModal

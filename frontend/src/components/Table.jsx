@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "./ui/button";
 import { FaFilePdf } from "react-icons/fa";
-import { PaperDetailModal } from "./PaperDetailModal"; // ← モーダルコンポーネントをインポート
-
+import { PaperDetailModal } from "./PaperDetailModal";
 import {
   Table,
   TableBody,
@@ -19,9 +18,7 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
   const [sortColumn, setSortColumn] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
-  
-
+  const scrollRef = useRef(null);
 
   const closeModal = () => {
     setSelectedRow(null);
@@ -34,9 +31,7 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
   };
 
   const saveChanges = () => {
-    if (onUpdateRow) {
-      onUpdateRow(editedData);
-    }
+    if (onUpdateRow) onUpdateRow(editedData);
     setSelectedRow(editedData);
     setIsEditing(false);
   };
@@ -45,11 +40,11 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
     const { name, value } = e.target;
     setEditedData((prev) => ({ ...prev, [name]: value }));
   };
+
   const handleDeleteRow = (id) => {
-    setTableData((prev) => prev.filter((row) => row.id !== id));
-    setSelectedRow(null); // モーダルを閉じる
+    setTableData((prev) => prev.filter((row) => row.paper_id !== id));
+    setSelectedRow(null);
   };
-  
 
   const handleSort = (columnId) => {
     if (sortColumn === columnId) {
@@ -76,7 +71,6 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-6">
-      {/* モーダル表示 */}
       <PaperDetailModal
         selectedRow={selectedRow}
         isEditing={isEditing}
@@ -86,102 +80,64 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
         onSave={saveChanges}
         onCancelEdit={() => setIsEditing(false)}
         onInputChange={handleInputChange}
-        onDelete={() => handleDeleteRow(selectedRow && selectedRow.id)}
-        isDeleteModalOpen={isDeleteModalOpen} // ← ★追加
-        setIsDeleteModalOpen={setIsDeleteModalOpen} // ← ★追加
+        onDelete={() => handleDeleteRow(selectedRow && selectedRow.paper_id)}
+        isDeleteModalOpen={isDeleteModalOpen}
+        setIsDeleteModalOpen={setIsDeleteModalOpen}
         setTableData={setTableData}
         refreshPapers={refreshPapers}
       />
 
-
-
-
-      {/* テーブルとPDF列 */}
-      <div className="relative flex rounded-lg shadow-md overflow-hidden bg-white">
-        <div className="overflow-x-auto flex-1">
-          {/* スクロールテーブル部分 */}
-          <div className="overflow-x-auto w-full pr-[120px]">
-            <Table className="min-w-full">
-              <TableHeader>
-                <TableRow className="bg-[#f7faff] h-[56px]">
-                  {visibleColumns.map((col) =>
-                    col.id === "core-rank" ? (
-                      <TableHead
-                        key={col.id}
-                        onClick={() => handleSort(col.id)}
-                        className="px-4 py-3 text-left text-gray-700 font-semibold tracking-wide cursor-pointer select-none hover:text-sky-700"
-                        style={{ whiteSpace: "nowrap" }}
-                      >
-                        {col.label}
-                        {sortColumn === col.id && (
-                          <span className="ml-1">
-                            {sortOrder === "asc" ? "▲" : "▼"}
-                          </span>
-                        )}
-                      </TableHead>
-                    ) : (
-                      <TableHead
-                        key={col.id}
-                        onClick={() => handleSort(col.id)}
-                        className="px-4 py-3 text-left text-gray-700 font-semibold tracking-wide cursor-pointer select-none hover:text-sky-700"
-                      >
-                        {col.label}
-                        {sortColumn === col.id && (
-                          <span className="ml-1">
-                            {sortOrder === "asc" ? "▲" : "▼"}
-                          </span>
-                        )}
-                      </TableHead>
-                    )
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-gray-200">
-                {sortedData.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className="h-[56px] hover:bg-[#f0f4f8] transition-colors cursor-pointer"
-                    onClick={() => setSelectedRow(row)}
+      <div className="relative flex rounded-lg shadow-md bg-white max-h-[calc(100vh-300px)] overflow-hidden">
+        <div className="overflow-auto w-full">
+          <Table className="min-w-full">
+            <TableHeader className="sticky top-0 z-20 bg-[#f7faff]">
+              <TableRow className="h-[56px]">
+                {visibleColumns.map((col) => (
+                  <TableHead
+                    key={col.id}
+                    onClick={() => handleSort(col.id)}
+                    className="px-4 py-3 text-left text-gray-700 font-semibold tracking-wide cursor-pointer select-none hover:text-sky-700 whitespace-nowrap"
                   >
-                    {visibleColumns.map((col) => (
-                      <TableCell key={col.id} className="px-4 py-3 text-gray-800 whitespace-nowrap">
-                        {row[col.id] || "N/A"}
-                      </TableCell>
-                    ))}
-                  </TableRow>
+                    {col.label}
+                    {sortColumn === col.id && (
+                      <span className="ml-1">{sortOrder === "asc" ? "▲" : "▼"}</span>
+                    )}
+                  </TableHead>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
+                <TableHead className="px-4 py-3 text-center font-semibold text-gray-700 sticky right-0 bg-[#f7faff] z-30">
+                  PDF
+                </TableHead>
+              </TableRow>
+            </TableHeader>
 
-          {/* PDF列（右端に固定） */}
-          <div className="absolute top-0 right-0 w-[120px] z-10">
-            {/* ヘッダー */}
-            <div className="h-[56px] bg-[#f7faff] flex items-center justify-center font-semibold text-gray-700 border-l border-[#f7faff]">
-              {/* 空ヘッダー */}
-            </div>
-
-          {/* 各行のPDFボタン */}
-          {sortedData.map((row) => (
-            <div
-              key={row.id}
-              className="h-[56px] flex items-center justify-center border-t bg-white"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Button
-                className="bg-[#aac2de] text-white px-3 py-2 rounded-md text-sm shadow-md hover:bg-[#90b4d4] will-change-transform hover:scale-105 transform-gpu hover:brightness-105 transition-all"
-                onClick={() => {
-                  if (row.pdf_url) window.open(row.pdf_url, "_blank");
-                  else alert("PDFのURLが設定されていません");
-                }}
-              >
-                <FaFilePdf className="text-white mr-1" />
-                PDF
-              </Button>
-            </div>
-          ))}
-
-          </div>
+            <TableBody>
+              {sortedData.map((row) => (
+                <TableRow
+                  key={row.paper_id}
+                  className="h-[56px] hover:bg-[#f0f4f8] transition-colors cursor-pointer"
+                  onClick={() => setSelectedRow(row)}
+                >
+                  {visibleColumns.map((col) => (
+                    <TableCell key={col.id} className="px-4 py-3 text-gray-800 whitespace-nowrap">
+                      {row[col.id] || "N/A"}
+                    </TableCell>
+                  ))}
+                  <TableCell className="px-4 py-3 sticky right-0 bg-white border-l">
+                    <Button
+                      className="bg-[#aac2de] text-white px-3 py-2 rounded-md text-sm shadow-md hover:bg-[#90b4d4]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (row.pdf_url) window.open(row.pdf_url, "_blank");
+                        else alert("PDFのURLが設定されていません");
+                      }}
+                    >
+                      <FaFilePdf className="text-white mr-1" /> PDF
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>
