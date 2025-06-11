@@ -114,7 +114,7 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
               {sortedData.map((row) => (
                 <TableRow
                   key={row.paper_id}
-                  className="h-[56px] hover:bg-[#f0f4f8] transition-colors cursor-pointer"
+                  className="h-[56px] hover:bg-[#f0f4f8] transition-colors cursor-pointer group"
                   onClick={() => setSelectedRow(row)}
                 >
                   {visibleColumns.map((col) => (
@@ -122,7 +122,7 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
                       {row[col.id] || "N/A"}
                     </TableCell>
                   ))}
-                  <TableCell className="px-4 py-3 sticky right-0 bg-white border-l">
+                  <TableCell className="px-4 py-3 sticky right-0 bg-white group-hover:bg-[#f0f4f8] border-l transition-colors">
                     <Button
                       className="bg-[#aac2de] text-white px-3 py-2 rounded-md text-sm shadow-md hover:bg-[#90b4d4]"
                       onClick={(e) => {
