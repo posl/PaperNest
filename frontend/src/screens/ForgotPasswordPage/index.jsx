@@ -6,11 +6,17 @@ export default function ForgotPasswordPage() {
   const [username, setUsername] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
 
   const isValidPassword = (pw) => /^[a-zA-Z0-9]{6,}$/.test(pw);
+
+  const toHalfWidth = (str) =>
+    str.replace(/[！-～]/g, (ch) =>
+      String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
+    ).replace(/　/g, " ");
 
   const handleVerify = async () => {
     if (!username || !schoolName) {
@@ -32,7 +38,7 @@ export default function ForgotPasswordPage() {
         return;
       }
 
-      setMessage("✅ ユーザー確認に成功しました。新しいパスワードを入力してください。");
+      // setMessage("新しいパスワードを2回入力してください。");
       setStep("reset");
     } catch {
       setMessage("サーバーに接続できません。");
@@ -42,6 +48,11 @@ export default function ForgotPasswordPage() {
   const handleResetPassword = async () => {
     if (!isValidPassword(newPassword)) {
       setMessage("パスワードは6文字以上の半角英数字で入力してください。");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setMessage("パスワードが一致しません。もう一度確認してください。");
       return;
     }
 
@@ -73,7 +84,6 @@ export default function ForgotPasswordPage() {
           {step === "verify" ? "ユーザー確認" : "パスワード再設定"}
         </h2>
 
-        {/* ユーザ確認ステップ */}
         {step === "verify" && (
           <>
             <input
@@ -81,44 +91,61 @@ export default function ForgotPasswordPage() {
               placeholder="ユーザー名"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full mb-4 px-4 py-2 border border-gray-300 rounded-lg"
+              className="w-full mb-4 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <input
               type="text"
               placeholder="小学校名"
               value={schoolName}
               onChange={(e) => setSchoolName(e.target.value)}
-              className="w-full mb-6 px-4 py-2 border border-gray-300 rounded-lg"
+              className="w-full mb-6 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               onClick={handleVerify}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+              className="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:scale-[1.01] text-white py-2 rounded-lg hover:bg-blue-700"
             >
               次へ
             </button>
           </>
         )}
 
-        {/* パスワードリセットステップ */}
         {step === "reset" && (
           <>
             <input
               type="password"
               placeholder="新しいパスワード"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full mb-6 px-4 py-2 border border-gray-300 rounded-lg"
+              onChange={(e) => setNewPassword(toHalfWidth(e.target.value))}
+              className="w-full px-4 py-2 mb-2 border border-gray-300 rounded-lg"
             />
+            <input
+              type="password"
+              placeholder="パスワード（確認）"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(toHalfWidth(e.target.value))}
+              className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg"
+            />
+            <p className="pl-1 text-sm text-gray-400 mb-4">
+              パスワードは6文字以上の半角英数字で入力してください。
+            </p>
             <button
               onClick={handleResetPassword}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+              className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
             >
               パスワードを再設定する
             </button>
           </>
         )}
 
-        {message && <p className="text-sm text-center text-red-500 mt-4">{message}</p>}
+        <p
+          className={`text-sm text-center mt-4 ${
+            message.includes("✅") || message.includes("完了")
+              ? "text-green-600"
+              : "text-red-500"
+          }`}
+        >
+          {message}
+        </p>
       </div>
     </div>
   );

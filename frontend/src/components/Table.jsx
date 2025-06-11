@@ -104,7 +104,7 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
                     )}
                   </TableHead>
                 ))}
-                <TableHead className="px-4 py-3 text-center font-semibold text-gray-700 sticky right-0 bg-[#f7faff] z-30">
+                <TableHead className="px-4 py-3 text-center font-semibold text-gray-700 sticky right-0 bg-[#f7faff] z-30" style={{ width: "120px", minWidth: "120px", maxWidth: "120px" }}>
                   PDF
                 </TableHead>
               </TableRow>
@@ -123,6 +123,7 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
                     </TableCell>
                   ))}
                   <TableCell className="px-4 py-3 sticky right-0 bg-white group-hover:bg-[#f0f4f8] border-l transition-colors">
+                  <div className="flex justify-center items-center h-full">
                     <Button
                       className="bg-[#aac2de] text-white px-3 py-2 rounded-md text-sm shadow-md hover:bg-[#90b4d4]"
                       onClick={(e) => {
@@ -133,6 +134,7 @@ export const TableSection = ({ visibleColumns, tableData, setTableData, onUpdate
                     >
                       <FaFilePdf className="text-white mr-1" /> PDF
                     </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
