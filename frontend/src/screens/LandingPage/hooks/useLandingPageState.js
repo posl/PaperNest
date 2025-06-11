@@ -1,6 +1,16 @@
 import { useState } from "react";
 
-export const useLandingPageState = (columns) => {
+export const useLandingPageState = (
+  columns,
+  {
+    currentCategory = "",
+    refreshPapers = null,
+    setIsLoading = () => {},
+    setUploadProgress = () => {},
+    setUploadStatus = () => {},
+  } = {}
+) => {
+
   // サイドバーの開閉状態
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   // const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -30,17 +40,60 @@ export const useLandingPageState = (columns) => {
     setIsDragging(false); // ドラッグが終了したら状態をリセット
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
-    setIsDragging(false); // ドラッグ終了
-    const file = e.dataTransfer.files[0]; // ドロップされたファイルを取得
-    if (file && file.type === "application/pdf") {
-      console.log("ドロップされたPDFファイル:", file.name);
-      // 必要に応じてファイルを処理
-    } else {
-      alert("PDFファイルのみアップロードできます");
+    setIsDragging(false);
+  
+    const file = e.dataTransfer.files[0];
+    if (!file || file.type !== "application/pdf") {
+      setUploadStatus("error");
+      setTimeout(() => setIsLoading(false), 1500);
+      return;
     }
+  
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("category", currentCategory);
+  
+    let progress = 0;
+    setUploadProgress(0);
+    setUploadStatus("uploading");
+    setIsLoading(true);
+  
+    const interval = setInterval(() => {
+      progress += 0.006;
+      setUploadProgress(Math.min(progress, 0.97));
+    }, 100);
+  
+    try {
+      const res = await fetch("http://localhost:8000/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+  
+      clearInterval(interval);
+      setUploadProgress(1.0);
+  
+      const result = await res.json();
+  
+      if (!res.ok) {
+        setUploadStatus(res.status === 409 ? "duplicate" : "error");
+      } else {
+        setUploadStatus("success");
+        if (typeof refreshPapers === "function") refreshPapers();
+      }
+    } catch (err) {
+      console.error("ドラッグアップロード失敗:", err);
+      setUploadStatus("error");
+    }
+  
+    setTimeout(() => setIsLoading(false), 2000);
   };
+  
+
 
   // チェックボックスの変更ハンドラー
   // const handleCheckboxChange = (id) => {

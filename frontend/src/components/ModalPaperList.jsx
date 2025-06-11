@@ -91,7 +91,7 @@ export const ModalPaperList = ({ isOpen, onClose, papers }) => {
             </div>
 
             <p><strong>Title:</strong> {selectedPaper.title}</p>
-            <p><strong>Author:</strong> {selectedPaper.authors}</p>
+            <p><strong>Author:</strong> {selectedPaper.authors?.join(", ")}</p>
             <p><strong>Year:</strong> {selectedPaper.year}</p>
             <p><strong>Conferencce:</strong> {selectedPaper.conference}</p>
             <p><strong>Core-Rank:</strong> {selectedPaper.core_rank}</p>
