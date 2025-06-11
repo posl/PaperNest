@@ -1,13 +1,20 @@
-// ✅ src/context/AuthContext.jsx
-import { createContext, useContext, useState, useEffect } from "react";
+// AuthContext.js
+import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // 初回レンダリング時にlocalStorageを参照
-    return !!localStorage.getItem("token");
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(null); // ← 初期値nullにして最初は判断保留
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      // サーバーに確認しても良い
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+    }
+  }, []);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated }}>

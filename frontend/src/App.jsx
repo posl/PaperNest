@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useAuth } from "./context/AuthContext"; // ← 追加
+
 import WelcomePage from "./screens/WelcomePage";
 import { LandingPage } from "./screens/LandingPage";
 import SignInPage from "./screens/SignInPage";
@@ -8,8 +10,12 @@ import SettingsPage from "./screens/UserPage/SettingsPage";
 import PrivateRoute from "./components/PrivateRoute";
 import ForgotPasswordPage from "./screens/ForgotPasswordPage";
 
-
 function App() {
+  const { isAuthenticated } = useAuth();
+
+  // 🛑 判定が済むまで描画しない
+  if (isAuthenticated === null) return null; // または <Loading /> など
+
   return (
     <BrowserRouter>
       <Routes>
