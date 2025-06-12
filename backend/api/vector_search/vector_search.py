@@ -1,21 +1,18 @@
 import os
 
-from groq import Groq
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends
+from groq import Groq
 from langchain.indexes.vectorstore import VectorStoreIndexWrapper
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_groq import ChatGroq
+from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 
-from backend.config import EMBEDDINGS_MODEL, CHAT_MODEL, VECTOR_STORE_DIR
+from backend.config import CHAT_MODEL, EMBEDDINGS_MODEL, VECTOR_STORE_DIR
 from backend.database.database import SessionLocal
 from backend.models.models import Paper, User
+from backend.schema.schema import VectorSearchRequestSchema, VectorSearchResponseSchema
 from backend.utils.security import get_current_user
-from backend.schema.schema import (
-    VectorSearchRequestSchema,
-    VectorSearchResponseSchema,
-)
 
 router = APIRouter()  # インスタンス作成
 
@@ -35,7 +32,9 @@ if VECTOR_STORE_DIR.exists():
     )
 
 
-def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int, user_id: int, category: str):
+def ask_llm(
+    query: str, vectorstore: FAISS, llm: ChatGroq, k: int, user_id: int, category: str
+):
     vectorstoreindex = VectorStoreIndexWrapper(vectorstore=vectorstore)
     # LLMに質問を投げ，回答を生成
     answer = vectorstoreindex.query(query, llm)
@@ -52,7 +51,9 @@ def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int, user_id: int,
             "user_id": user_id,
             "category": category,
         }
-        for res, score in vectorstore.similarity_search_with_score(sentence, k=k, filter=filter):
+        for res, score in vectorstore.similarity_search_with_score(
+            sentence, k=k, filter=filter
+        ):
             if len(results) >= k:
                 break
             paper_id = res.metadata["source"]
@@ -90,15 +91,15 @@ def ask_llm(query: str, vectorstore: FAISS, llm: ChatGroq, k: int, user_id: int,
 
 # PDF検索質問を受け取り，類似したPDFを返す
 @router.post("/search", response_model=list[VectorSearchResponseSchema])
-async def vector_search(query: VectorSearchRequestSchema,
-                        current_user: User = Depends(get_current_user)
-                        ):
+async def vector_search(
+    query: VectorSearchRequestSchema, current_user: User = Depends(get_current_user)
+):
     user_id = current_user.id
     question = query.question
     language = query.language
     category = query.category
 
-    # 質問が英語以外の言語の場合，英語翻訳して回答させる
+    # 質問が英語以外の言語の場合，質問を英語翻訳して回答させる
     if language != "en":
         client = Groq(api_key=groq_api_key)
         system_prompt = "You are an excellent translator."
@@ -120,5 +121,5 @@ async def vector_search(query: VectorSearchRequestSchema,
         llm=llm,
         k=5,
         user_id=user_id,
-        category=category
+        category=category,
     )
