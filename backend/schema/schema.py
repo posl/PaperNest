@@ -1,11 +1,14 @@
+from typing import Any, List, Optional
+
 from pydantic import BaseModel, Field
-from typing import Optional, List, Any
+
 
 # 新規ユーザ登録リクエストスキーマ
 class UserCreate(BaseModel):
     username: str
     elementary_school: str
     password: str
+
 
 # 新規ユーザ登録レスポンススキーマ
 class UserOut(BaseModel):
@@ -16,64 +19,78 @@ class UserOut(BaseModel):
     class Config:
         orm_mode = True
 
+
 # ユーザ認証リフレッシュトークン付きトークンスキーマ
 class TokenWithRefresh(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
 
+
 # リフレッシュリクエストスキーマ
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
+
 
 # ユーザ認証トークンスキーマ
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 # パスワード変更リクエストスキーマ
 class PasswordChangeRequest(BaseModel):
     old_password: str
     new_password: str
 
+
 # パスワード変更レスポンススキーマ
 class PasswordChangeResponse(BaseModel):
     message: str
+
 
 # パスワードリセット用認証リクエストスキーマ
 class VerifyRequest(BaseModel):
     username: str
     elementary_school: str
 
+
 # パスワードリセット用認証レスポンススキーマ
 class VerifyResponse(BaseModel):
     message: str
+
 
 # パスワードリセットリクエストスキーマ
 class PasswordResetRequest(BaseModel):
     username: str
     new_password: str
 
+
 # パスワードリセットレスポンススキーマ
 class PasswordResetResponse(BaseModel):
     message: str
+
 
 # ユーザ名変更リクエストスキーマ
 class UsernameChangeRequest(BaseModel):
     new_username: str
     password: str
 
+
 # ユーザ名変更レスポンススキーマ
 class UsernameChangeResponse(BaseModel):
     message: str
+
 
 # ユーザアカウント削除リクエストスキーマ
 class AccountDeleteRequest(BaseModel):
     password: str
 
+
 # ユーザアカウント削除レスポンススキーマ
 class AccountDeleteResponse(BaseModel):
     message: str
+
 
 # 論文情報スキーマ
 class PaperSchema(BaseModel):
@@ -92,6 +109,7 @@ class PaperSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 # 論文アップロード成功時のレスポンススキーマ
 class UploadPDFResponseSchema(BaseModel):
@@ -118,6 +136,7 @@ class VectorSearchRequestSchema(BaseModel):
     language: str = Field(description="ユーザが使用した言語(ja または en)")
     category: str
 
+
 # ベクトル検索の応答用スキーマ
 class VectorSearchResponseSchema(BaseModel):
     paper_id: str
@@ -135,28 +154,46 @@ class VectorSearchResponseSchema(BaseModel):
     similarity: float = Field(description="類似度スコア")
     chunk_text: str
 
+
+# 論文への個別質問リクエストスキーマ
+class PaperQuestionRequestSchema(BaseModel):
+    question: str
+    language: str = Field(description="ユーザが使用した言語(ja または en)")
+    category: str
+
+
+# 論文への個別質問レスポンススキーマ
+class PaperQuestionResponseSchema(BaseModel):
+    llm_answer: str = Field(description="LLMの回答")
+
+
 # 論文情報更新リクエストスキーマ
 class PaperUpdateRequestSchema(BaseModel):
     paper_id: str
     field: str
     value: Any
 
+
 # 論文情報更新レスポンススキーマ
 class PaperUpdateResponseSchema(BaseModel):
     message: str
 
+
 # 論文情報削除レスポンススキーマ
 class PaperDeleteResponseSchema(BaseModel):
     message: str
+
 
 # 研究テーマ名更新リクエストスキーマ
 class ResearchThemeUpdateRequestSchema(BaseModel):
     old_research_theme: str
     new_research_theme: str
 
+
 # 研究テーマ名更新レスポンススキーマ
 class ResearchThemeUpdateResponseSchema(BaseModel):
     message: str
+
 
 # 研究テーマ削除レスポンススキーマ
 class ResearchThemeDeleteResponseSchema(BaseModel):

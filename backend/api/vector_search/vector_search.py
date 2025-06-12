@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from groq import Groq
 from langchain.indexes.vectorstore import VectorStoreIndexWrapper
 from langchain_community.vectorstores import FAISS
@@ -83,7 +83,7 @@ def ask_llm(
                     )
                 )
             else:
-                print(f"Paper with ID {paper_id} not found in the database.")
+                raise HTTPException(status_code=404, detail="Paper not found")
 
     db.close()
     return results

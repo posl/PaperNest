@@ -117,9 +117,9 @@ def get_retriever(index: FAISS) -> VectorStoreRetriever:
 
 # RAGチェーンを作成
 def create_rag_chain(
-    retriever: VectorStoreRetriever, grog_chat: ChatGroq, prompt: ChatPromptTemplate
+    retriever: VectorStoreRetriever, chat: ChatGroq, prompt: ChatPromptTemplate
 ) -> RunnableBinding:
-    question_answer_chain = create_stuff_documents_chain(groq_chat, prompt)
+    question_answer_chain = create_stuff_documents_chain(chat, prompt)
     rag_chain = create_retrieval_chain(retriever, question_answer_chain)
     return rag_chain
 
