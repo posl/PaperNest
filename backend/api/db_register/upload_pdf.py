@@ -16,13 +16,14 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_groq import ChatGroq
+from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
 from backend.api.db_register.db_register import register_paper
 from backend.api.db_register.get_pdf_title import get_pdf_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
-from backend.config import BASE_URL, CHAT_MODEL, EMBEDDINGS_MODEL, UPLOAD_DIR,VECTOR_STORE_DIR
+from backend.config import BASE_URL, CHAT_MODEL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
 from backend.database.database import get_db
 from backend.models.models import Paper, User
 from backend.schema.schema import PaperSchema, UploadPDFResponseSchema
@@ -35,7 +36,7 @@ load_dotenv()
 groq_api_key = os.environ["GROQ_API_KEY"]
 groq_chat = ChatGroq(
     groq_api_key=groq_api_key,
-    model_name="llama3-70b-8192",
+    model_name=CHAT_MODEL,
 )
 
 system_prompt = "You are a helpful assistant. Please respond based on the content of the paper PDF.\n\n{context}"
@@ -63,7 +64,8 @@ def load_vector_store() -> FAISS:
     else:
         documents = [
             Document(
-                page_content="", metadata={"paper_id": "", "user_id": "", "category": ""}
+                page_content="",
+                metadata={"paper_id": "", "user_id": "", "category": ""},
             )
         ]
         vector_store = FAISS.from_documents(documents, embeddings)
