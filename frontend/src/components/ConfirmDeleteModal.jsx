@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "./ui/button";
 import { Icon } from '@iconify/react';
 
-export const ConfirmDeleteModal = ({ isOpen, onCancel, onConfirm }) => {
+export const ConfirmDeleteModal = ({ isOpen, message, onConfirm, onCancel }) => {
   if (!isOpen) return null;
 
   return (
@@ -10,7 +10,7 @@ export const ConfirmDeleteModal = ({ isOpen, onCancel, onConfirm }) => {
     <div className="bg-white p-6 rounded-xl shadow-xl ring-1 ring-gray-300 w-[340px]">
         <h2 className="text-base font-medium text-gray-800 mb-3">
         <Icon icon="twemoji:warning" className="inline-block mr-2" />
-        この項目を削除してもよろしいですか？
+        {message}
         </h2>
         <p className="text-sm text-gray-600 mb-6">
         この操作は取り消せません。
@@ -24,7 +24,10 @@ export const ConfirmDeleteModal = ({ isOpen, onCancel, onConfirm }) => {
         </Button>
         <Button
             className="bg-neutral-800 text-white hover:bg-neutral-700 px-4 py-2 rounded-md"
-            onClick={onConfirm}
+            onClick={async () => {
+              await onConfirm();
+              onCancel();
+            }}
         >
             削除する
         </Button>

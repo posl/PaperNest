@@ -19,15 +19,35 @@ export const PaperDetailModal = ({
   onDelete,
   isDeleteModalOpen,
   setIsDeleteModalOpen,
+  setTableData,      // added
+  refreshPapers,     // added
 }) => {
   const [isBibtexOpen, setIsBibtexOpen] = useState(false);
   
+  // 論文削除確定ハンドラ
+  const handleConfirmDeleteFromEdit = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`http://localhost:8000/papers/delete/${selectedRow.paper_id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const refreshed = await refreshPapers();
+      if (Array.isArray(refreshed)) {
+        setTableData(refreshed);
+      }
+    } catch (err) {
+      console.error("論文削除エラー:", err);
+    }
+    setIsDeleteModalOpen(false);
+    onClose();
+  };
 
   if (!selectedRow) return null;
 
   const openPdf = () => {
-    if (selectedRow.pdf) {
-      window.open(selectedRow.pdf, "_blank");
+    if (selectedRow.pdf_url) {
+      window.open(selectedRow.pdf_url, "_blank");
     } else {
       alert("PDFのURLがありません");
     }
@@ -64,16 +84,16 @@ export const PaperDetailModal = ({
               onSave={onSave}
               onCancel={onCancelEdit}
               onDelete={() => setIsDeleteModalOpen(true)}
+              setTableData={setTableData}        // added
+              refreshPapers={refreshPapers}      // added
             />
             {isDeleteModalOpen && (
-                <ConfirmDeleteModal
+              <ConfirmDeleteModal
                 isOpen={isDeleteModalOpen}
+                message="この論文を削除してもよろしいですか？"
                 onCancel={() => setIsDeleteModalOpen(false)}
-                onConfirm={() => {
-                    onDelete(); // ← handleDeleteRow() を呼び出す
-                    setIsDeleteModalOpen(false);
-                }}
-                />
+                onConfirm={handleConfirmDeleteFromEdit}
+              />
             )}
             
           </div>
@@ -81,18 +101,18 @@ export const PaperDetailModal = ({
           <div className="space-y-4 text-gray-800 px-4">
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
               <p><strong>Title:</strong> {selectedRow.title}</p>
-              <p><strong>Author:</strong> {selectedRow.author || "N/A"}</p>
+              <p><strong>Author:</strong> {selectedRow.authors || "N/A"}</p>
               <p><strong>Year:</strong> {selectedRow.year || "N/A"}</p>
               <p><strong>Conference:</strong> {selectedRow.conference || "N/A"}</p>
-              <p><strong>Core-rank:</strong> {selectedRow["core-rank"] || "N/A"}</p>
-              <p><strong>Book:</strong> {selectedRow.book || "N/A"}</p>
+              <p><strong>Core-rank:</strong> {selectedRow.core_rank || "N/A"}</p>
+              {/* <p><strong>Book:</strong> {selectedRow.book || "N/A"}</p> */}
             </div>
 
             {/* Abstract */}
             <div className="mt-6">
               <p className="font-semibold text-lg mb-1">Abstract:</p>
               <div className="resize-y border p-4 rounded-lg bg-gray-50 text-base whitespace-pre-wrap h-[300px] overflow-y-auto">
-                {selectedRow.abstract || "N/A"}
+                {selectedRow.summary || "N/A"}
               </div>
             </div>
 

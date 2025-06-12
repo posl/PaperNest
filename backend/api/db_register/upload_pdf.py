@@ -16,7 +16,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_groq import ChatGroq
-from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
@@ -36,7 +35,7 @@ load_dotenv()
 groq_api_key = os.environ["GROQ_API_KEY"]
 groq_chat = ChatGroq(
     groq_api_key=groq_api_key,
-    model_name=CHAT_MODEL,
+    model_name="llama3-70b-8192",
 )
 
 system_prompt = "You are a helpful assistant. Please respond based on the content of the paper PDF.\n\n{context}"

@@ -11,13 +11,16 @@ export const TabScrollArea = ({
   handleContextMenu,
   editingTabId,
   setEditingTabId,
+  setEditingOldName,
   handleAddTab,
   tabRefs,
+  onRenameCategory,
 }) => {
   const tabScrollRef = useRef(null);
   const [showScrollButtons, setShowScrollButtons] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [oldName, setOldName] = useState("");
 
   const scrollLeft = () => {
     tabScrollRef.current?.scrollBy({ left: -150, behavior: 'smooth' });
@@ -61,13 +64,61 @@ export const TabScrollArea = ({
             {editingTabId === tab.id ? (
               <input
                 value={tab.name}
+                onFocus={() => {
+                  setOldName(tab.name);
+                  setEditingOldName(tab.name);
+                }}
                 onChange={(e) =>
                   setTabs((prevTabs) =>
                     prevTabs.map((t) => (t.id === tab.id ? { ...t, name: e.target.value } : t))
                   )
                 }
-                onBlur={() => tab.name.trim() && setEditingTabId(null)}
-                onKeyDown={(e) => e.key === "Enter" && tab.name.trim() && setEditingTabId(null)}
+                onBlur={async () => {
+                  console.log("TabScrollArea: onBlur rename start. Tab ID:", tab.id, "oldName:", oldName, "newName:", tab.name);
+                  if (!tab.name.trim()) return;
+                  try {
+                    const token = localStorage.getItem("token");
+                    await fetch("http://localhost:8000/research_theme/update", {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        old_research_theme: oldName,
+                        new_research_theme: tab.name.trim(),
+                      }),
+                    });
+                    console.log("TabScrollArea: onBlur API call succeeded for Tab ID", tab.id);
+                    onRenameCategory(oldName, tab.name.trim());
+                  } catch (err) {
+                    console.error("研究テーマ変更に失敗:", err);
+                  }
+                  setEditingTabId(null);
+                }}
+                onKeyDown={async (e) => {
+                  console.log("TabScrollArea: onKeyDown Enter rename start. Tab ID:", tab.id, "oldName:", oldName, "newName:", tab.name);
+                  if (e.key !== "Enter" || !tab.name.trim()) return;
+                  try {
+                    const token = localStorage.getItem("token");
+                    await fetch("http://localhost:8000/research_theme/update", {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        old_research_theme: oldName,
+                        new_research_theme: tab.name.trim(),
+                      }),
+                    });
+                    console.log("TabScrollArea: onKeyDown API call succeeded for Tab ID", tab.id);
+                    onRenameCategory(oldName, tab.name.trim());
+                  } catch (err) {
+                    console.error("研究テーマ変更に失敗:", err);
+                  }
+                  setEditingTabId(null);
+                }}
                 className="border border-gray-300 px-2 py-1 rounded text-sm"
                 autoFocus
               />
@@ -84,7 +135,11 @@ export const TabScrollArea = ({
                   setSelectedTabId(tab.id);
                 }}
                 onContextMenu={(e) => handleContextMenu(e, tab.id)}
-                onDoubleClick={() => setEditingTabId(tab.id)}
+                onDoubleClick={() => {
+                  setOldName(tab.name);
+                  setEditingOldName(tab.name);
+                  setEditingTabId(tab.id);
+                }}
               >
                 {tab.name}
               </Button>
