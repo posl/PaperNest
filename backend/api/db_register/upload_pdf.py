@@ -15,15 +15,21 @@ from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
-from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
+from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
 from backend.api.db_register.db_register import register_paper
 from backend.api.db_register.get_pdf_title import get_pdf_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
-from backend.config import BASE_URL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
+from backend.config import (
+    BASE_URL,
+    CHAT_MODEL,
+    EMBEDDINGS_MODEL,
+    UPLOAD_DIR,
+    VECTOR_STORE_DIR,
+)
 from backend.database.database import get_db
 from backend.models.models import Paper, User
 from backend.schema.schema import PaperSchema, UploadPDFResponseSchema
@@ -36,7 +42,7 @@ load_dotenv()
 groq_api_key = os.environ["GROQ_API_KEY"]
 groq_chat = ChatGroq(
     groq_api_key=groq_api_key,
-    model_name="llama3-70b-8192",
+    model_name=CHAT_MODEL,
 )
 
 system_prompt = "You are a helpful assistant. Please respond based on the content of the paper PDF.\n\n{context}"
@@ -62,7 +68,11 @@ def load_vector_store() -> FAISS:
             allow_dangerous_deserialization=True,
         )
     else:
-        documents = [Document(page_content="", metadata={"source": ""})]
+        documents = [
+            Document(
+                page_content="", metadata={"paper_id": "", "user_id": "", "category": ""}
+            )
+        ]
         vector_store = FAISS.from_documents(documents, embeddings)
 
     return vector_store
@@ -71,7 +81,6 @@ def load_vector_store() -> FAISS:
 # PDFファイルからテキストを抽出
 def read_text_from_pdf(pdf_path):
     reader = PdfReader(pdf_path)
-    # print(reader.pages[0].extract_text())
     text = ""
     for page_num in range(len(reader.pages)):
         page = reader.pages[page_num]
@@ -92,15 +101,13 @@ def split_pdf_text(pdf_text: str) -> list:
 
 
 # テキストを埋め込みベクトルに変換
-def embedding_text(splited_text: list, pdf_id: str, user_id: int, category: str) -> FAISS:
+def embedding_text(
+    splited_text: list, pdf_id: str, user_id: int, category: str
+) -> FAISS:
     documents = [
         Document(
             page_content=text,
-            metadata={
-                "source": pdf_id,
-                "user_id": user_id,
-                "category": category
-            }
+            metadata={"paper_id": pdf_id, "user_id": user_id, "category": category},
         )
         for text in splited_text
     ]
@@ -149,7 +156,9 @@ def calculate_first_page_hash(pdf_bytes: bytes) -> str:
     return hash_value
 
 
-def analyze_pdf_from_bytes(pdf_bytes: bytes, user_id: int, category: str) -> Dict[str, str]:
+def analyze_pdf_from_bytes(
+    pdf_bytes: bytes, user_id: int, category: str
+) -> Dict[str, str]:
     # PDFを保存
     pdf_id = str(uuid.uuid4())
     pdf_url = f"{BASE_URL}/uploaded/{pdf_id}.pdf"
@@ -205,7 +214,6 @@ async def upload_pdf(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-
     # PDFのバリデーション
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
@@ -217,7 +225,11 @@ async def upload_pdf(
         raise HTTPException(status_code=400, detail="PDFが空です．")
 
     # 重複チェック：同じカテゴリとハッシュのPDFが既に存在するか？
-    existing = db.query(Paper).filter_by(category=category, hash=pdf_hash, user_id=current_user.id).first()
+    existing = (
+        db.query(Paper)
+        .filter_by(category=category, hash=pdf_hash, user_id=current_user.id)
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=409, detail="このPDFはすでに登録されています．")
 
@@ -241,14 +253,16 @@ async def upload_pdf(
             "citations": None,
             "core_rank": None,
         }
-    metadata.update({
-        "pdf_id": pdf_info["pdf_id"],
-        "pdf_url": pdf_info["pdf_url"],
-        "summary": pdf_info["summary"],
-        "category": category,
-        "hash": pdf_hash,
-        "user_id": current_user.id,
-    })
+    metadata.update(
+        {
+            "pdf_id": pdf_info["pdf_id"],
+            "pdf_url": pdf_info["pdf_url"],
+            "summary": pdf_info["summary"],
+            "category": category,
+            "hash": pdf_hash,
+            "user_id": current_user.id,
+        }
+    )
     suc_or_fai = "failure"
     suc_or_fai = register_paper(metadata)
     final_data = PaperSchema(
