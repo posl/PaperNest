@@ -4,18 +4,20 @@ import { secureFetch } from "../utils/apiClient";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null); // 初期null（未判定）
+ const [isAuthenticated, setIsAuthenticated] = useState(null); // null = 未判定
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // ← 追加
 
   useEffect(() => {
     const verifyToken = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
         setIsAuthenticated(false);
+        setIsCheckingAuth(false);
         return;
       }
 
       try {
-        const res = await secureFetch("http://localhost:8000/me", {
+        const res = await secureFetch("http://localhost:8000/get_user_info", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -28,6 +30,8 @@ export const AuthProvider = ({ children }) => {
       } catch (err) {
         console.error("トークン検証失敗:", err);
         setIsAuthenticated(false);
+      } finally {
+        setIsCheckingAuth(false); // ← 最後に検証完了を明示
       }
     };
 
@@ -35,7 +39,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated }}>
+    <AuthContext.Provider value={{ isAuthenticated, isCheckingAuth, setIsAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );
