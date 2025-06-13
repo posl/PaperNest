@@ -1,19 +1,36 @@
-// AuthContext.js
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null); // ← 初期値nullにして最初は判断保留
+  const [isAuthenticated, setIsAuthenticated] = useState(null); // 初期null（未判定）
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      // サーバーに確認しても良い
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
+    const verifyToken = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setIsAuthenticated(false);
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:8000/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.ok) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem("token");
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        console.error("トークン検証失敗:", err);
+        setIsAuthenticated(false);
+      }
+    };
+
+    verifyToken();
   }, []);
 
   return (

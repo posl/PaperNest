@@ -76,7 +76,7 @@ export const EditForm = ({
           />
         </div>
 
-        <div>
+        {/* <div>
           <label className="block font-bold mb-2">Book:</label>
           <input
             type="text"
@@ -85,7 +85,7 @@ export const EditForm = ({
             onChange={handleInputChange}
             className="w-full p-2 border border-gray-300 rounded"
           />
-        </div>
+        </div> */}
 
         <div>
           <label className="block font-bold mb-2">Abstract:</label>
