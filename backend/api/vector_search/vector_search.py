@@ -38,15 +38,17 @@ def ask_llm(
     vectorstoreindex = VectorStoreIndexWrapper(vectorstore=vectorstore)
     # LLMに質問を投げ，回答を生成
     answer = vectorstoreindex.query(query, llm)
-    print(f"Answer: {answer}")
+    # print(f"Answer: {answer}")
 
     results = []
     paper_ids = set()
     db = SessionLocal()
+    # debug = []
     # LLMの回答を分割し，分割されたそれぞれの文に対してベクトル検索
     for sentence in answer.split("\n"):
         if len(results) >= k:
             break
+        # ユーザーIDとカテゴリーでフィルタリング
         filter = {
             "user_id": user_id,
             "category": category,
@@ -82,10 +84,13 @@ def ask_llm(
                         chunk_text=res.page_content,
                     )
                 )
+                # debug.append({"paper_id": paper.paper_id, "title": paper.title, "url": paper.pdf_url})
+                print(f"Debug info: {paper.paper_id}, {paper.title}, {paper.pdf_url}")
             else:
                 raise HTTPException(status_code=404, detail="Paper not found")
 
     db.close()
+    # print(f"Debug info: {debug}")
     return results
 
 

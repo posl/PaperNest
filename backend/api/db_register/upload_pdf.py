@@ -34,10 +34,7 @@ router = APIRouter()  # インスタンス作成
 # GroqのAPI keyを取得
 load_dotenv()
 groq_api_key = os.environ["GROQ_API_KEY"]
-groq_chat = ChatGroq(
-    groq_api_key=groq_api_key,
-    model_name=CHAT_MODEL,
-)
+groq_chat = ChatGroq(groq_api_key=groq_api_key, model_name=CHAT_MODEL)
 
 system_prompt = "You are a helpful assistant. Please respond based on the content of the paper PDF.\n\n{context}"
 prompt = ChatPromptTemplate.from_messages(
@@ -52,21 +49,11 @@ embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
 
 # ベクトルデータベースをロード
 def load_vector_store() -> FAISS:
-    # embeddings = HuggingFaceEmbeddings(
-    #     model_name="sentence-transformers/all-mpnet-base-v2"
-    # )
     if os.path.exists(VECTOR_STORE_DIR):
-        vector_store = FAISS.load_local(
-            VECTOR_STORE_DIR,
-            embeddings,
-            allow_dangerous_deserialization=True,
-        )
+        vector_store = FAISS.load_local(VECTOR_STORE_DIR, embeddings, allow_dangerous_deserialization=True)
     else:
         documents = [
-            Document(
-                page_content="",
-                metadata={"paper_id": "", "user_id": "", "category": ""},
-            )
+            Document(page_content="", metadata={"paper_id": "", "user_id": "", "category": ""})
         ]
         vector_store = FAISS.from_documents(documents, embeddings)
 
@@ -86,10 +73,7 @@ def read_text_from_pdf(pdf_path):
 # PDFのテキストを分割
 def split_pdf_text(pdf_text: str) -> list:
     # チャンク間でoverlappingさせながらテキストを分割
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=3000,
-        chunk_overlap=50,
-    )
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=3000, chunk_overlap=50,)
     # テキストを分割
     splited_text = text_splitter.split_text(pdf_text)
     return splited_text
@@ -100,10 +84,7 @@ def embedding_text(
     splited_text: list, pdf_id: str, user_id: int, category: str
 ) -> FAISS:
     documents = [
-        Document(
-            page_content=text,
-            metadata={"paper_id": pdf_id, "user_id": user_id, "category": category},
-        )
+        Document(page_content=text, metadata={"paper_id": pdf_id, "user_id": user_id, "category": category})
         for text in splited_text
     ]
     index = FAISS.from_documents(documents, embedding=embeddings)
@@ -220,11 +201,7 @@ async def upload_pdf(
         raise HTTPException(status_code=400, detail="PDFが空です．")
 
     # 重複チェック：同じカテゴリとハッシュのPDFが既に存在するか？
-    existing = (
-        db.query(Paper)
-        .filter_by(category=category, hash=pdf_hash, user_id=current_user.id)
-        .first()
-    )
+    existing = (db.query(Paper).filter_by(category=category, hash=pdf_hash, user_id=current_user.id).first())
     if existing:
         raise HTTPException(status_code=409, detail="このPDFはすでに登録されています．")
 
