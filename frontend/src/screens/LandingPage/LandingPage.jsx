@@ -196,7 +196,7 @@ export const LandingPage = () => {
         },
         body: JSON.stringify({
           question,
-          lang: "ja", // 言語は必要に応じて変更
+          language: "ja", // 言語は必要に応じて変更
           category: currentCategory,
         }),
       });
