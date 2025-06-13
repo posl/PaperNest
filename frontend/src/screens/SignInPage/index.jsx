@@ -42,6 +42,7 @@ export default function SignInPage() {
 
       const data = await response.json();
       localStorage.setItem("token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
       setIsAuthenticated(true); // ✅ 認証状態を更新
       navigate("/app", { replace: true }); // ✅ 履歴に signin を残さない
     } catch (error) {

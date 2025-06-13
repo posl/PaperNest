@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { secureFetch } from "../utils/apiClient";
 
 const AuthContext = createContext();
 
@@ -14,7 +15,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const res = await fetch("http://localhost:8000/me", {
+        const res = await secureFetch("http://localhost:8000/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
 

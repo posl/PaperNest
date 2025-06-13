@@ -80,6 +80,7 @@ export default function SignUpPage() {
       
         const loginData = await loginRes.json();
         localStorage.setItem("token", loginData.access_token);
+        localStorage.setItem("refresh_token", loginData.refresh_token);
         setIsAuthenticated(true);
         navigate("/app", { replace: true });
       } catch (loginErr) {
