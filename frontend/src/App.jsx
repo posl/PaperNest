@@ -11,7 +11,8 @@ import PrivateRoute from "./components/PrivateRoute";
 import ForgotPasswordPage from "./screens/ForgotPasswordPage";
 
 function App() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isCheckingAuth } = useAuth();
+  if (isCheckingAuth) return null;
 
   // 🛑 判定が済むまで描画しない
   if (isAuthenticated === null) return null; // または <Loading /> など

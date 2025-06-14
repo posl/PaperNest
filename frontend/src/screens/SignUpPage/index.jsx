@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { Icon } from "@iconify/react";
+import { Separator } from "../../components/ui/separator";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -78,6 +80,7 @@ export default function SignUpPage() {
       
         const loginData = await loginRes.json();
         localStorage.setItem("token", loginData.access_token);
+        localStorage.setItem("refresh_token", loginData.refresh_token);
         setIsAuthenticated(true);
         navigate("/app", { replace: true });
       } catch (loginErr) {
@@ -102,10 +105,22 @@ export default function SignUpPage() {
   
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-50 px-4">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-white to-blue-200 px-4">
+          {/* Header風ロゴ部分：上部固定 */}
+      <div className="w-full flex items-center px-6 mt-6" style={{ height: "70px" }}>
+        <Icon icon="file-icons:tortoisesvn" className="text-4xl text-cyan-500" />
+        <Separator orientation="vertical" className="h-10 mx-4" />
+        <div
+          style={{ fontFamily: '"Abril Fatface", serif' }}
+          className="text-sky-600 text-3xl font-semibold tracking-wide"
+        >
+          PaperNest
+        </div>
+      </div>
+       <div className="flex-grow flex items-center justify-center mb-[70px]">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
         <h2
-        className="text-3xl font-bold text-center text-blue-700 mb-8 tracking-wide"
+        className="text-3xl font-bold text-center text-blue-800 mb-8 tracking-wide"
         style={{
             fontFamily: '"Abril Fatface", serif',
             textShadow: "1px 2px 4px rgba(0, 0, 0, 0.1)",
@@ -168,6 +183,7 @@ export default function SignUpPage() {
         >
           アカウント作成
         </button>
+        </div>
       </div>
     </div>
   );

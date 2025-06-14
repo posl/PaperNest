@@ -204,6 +204,7 @@ def fetch_bibtex_from_doi(doi: str) -> str:
 
 # BibTeXエントリのタイプを抽出（@article, @inproceedingsなど）
 def extract_bibtex_type(bibtex: str) -> str:
+    bibtex = bibtex.lstrip()  # 先頭の空白・改行を削除
     match = re.match(r"@(\w+)\{", bibtex)
     if match:
         return match.group(1).lower()
@@ -213,19 +214,25 @@ def extract_bibtex_type(bibtex: str) -> str:
 def get_core_rank_and_acronym(conference_name: str, entry_type: str) -> tuple[str, str]:
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # 会議の場合はconference_core_rank.csv，ジャーナルの場合はjournal_core_rank.csvを読み込む
-    csv_path = os.path.join(base_dir, "conference_core_rank.csv") if entry_type == "inproceedings" else os.path.join(base_dir, "journal_core_rank.csv")
+    csv_path = os.path.join(
+        base_dir,
+        "conference_core_rank.csv" if entry_type == "inproceedings" else "journal_core_rank.csv"
+    )
+
     try:
         df = pd.read_csv(csv_path)
-        titles = df['Title'].dropna().astype(str)
+        df = df.dropna(subset=['Title', 'Acronym'])
 
-        # Title が conference_name に部分一致する行を探す（大文字小文字を無視）
-        matched = titles[titles.apply(lambda t: t.lower() in conference_name.lower())]
-        if not matched.empty:
-            row = df.loc[matched.index[0]]
-            return row.get('Rank', 'Unknown'), row.get('Acronym', 'unknown')
-        else:
-            return "Unknown", "unknown"
+        normalized_conf_name = preprocess(conference_name)
+
+        for _, row in df.iterrows():
+            title = preprocess(str(row['Title']))
+            acronym = preprocess(str(row['Acronym']))
+
+            if title in normalized_conf_name or acronym in normalized_conf_name:
+                return row.get('Rank', 'Unknown'), row.get('Acronym', 'unknown')
+
+        return "Unknown", "unknown"
 
     except Exception as e:
         print(f"Error loading rank CSV: {e}")

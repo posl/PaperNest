@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { Icon } from "@iconify/react";
+import { Separator } from "../../components/ui/separator";
 
 export default function SignInPage() {
   const navigate = useNavigate();
@@ -40,6 +42,7 @@ export default function SignInPage() {
 
       const data = await response.json();
       localStorage.setItem("token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
       setIsAuthenticated(true); // ✅ 認証状態を更新
       navigate("/app", { replace: true }); // ✅ 履歴に signin を残さない
     } catch (error) {
@@ -48,11 +51,25 @@ export default function SignInPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-50 px-4">
+return (
+  <div className="min-h-screen flex flex-col bg-gradient-to-br from-white to-blue-200 px-4">
+    {/* Header風ロゴ部分：上部固定 */}
+    <div className="w-full flex items-center px-6 mt-6" style={{ height: "70px" }}>
+      <Icon icon="file-icons:tortoisesvn" className="text-4xl text-cyan-500" />
+      <Separator orientation="vertical" className="h-10 mx-4" />
+      <div
+        style={{ fontFamily: '"Abril Fatface", serif' }}
+        className="text-sky-600 text-3xl font-semibold tracking-wide"
+      >
+        PaperNest
+      </div>
+    </div>
+
+    {/* ログインフォーム：縦中央に */}
+    <div className="flex-grow flex items-center justify-center mb-[70px]">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
         <h2
-          className="text-3xl font-bold text-center text-blue-700 mb-8 tracking-wide"
+          className="text-3xl font-bold text-center text-blue-800 mb-8 tracking-wide"
           style={{
             fontFamily: '"Abril Fatface", serif',
             textShadow: "1px 2px 4px rgba(0, 0, 0, 0.1)",
@@ -92,5 +109,6 @@ export default function SignInPage() {
         </p>
       </div>
     </div>
-  );
+  </div>
+);
 }
