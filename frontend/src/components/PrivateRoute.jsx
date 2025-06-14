@@ -2,9 +2,12 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const PrivateRoute = ({ children }) => {
-  const { isAuthenticated, isCheckingAuth } = useAuth();
+  const { isAuthenticated } = useAuth();
 
-  if (isCheckingAuth) return null; // ローディング中は何も描画しない
+  // 認証判定がまだ終わっていないときは何も表示しない
+  if (isAuthenticated === null) {
+    return null; // または <LoadingScreen /> とか
+  }
 
   return isAuthenticated ? children : <Navigate to="/signin" />;
 };
