@@ -21,7 +21,7 @@ from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
 from backend.api.db_register.db_register import register_paper
-from backend.api.db_register.get_pdf_title import get_pdf_title
+from backend.api.db_register.get_paper_title import get_paper_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
 from backend.config import BASE_URL, CHAT_MODEL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
 from backend.database.database import get_db
@@ -113,6 +113,7 @@ def generate_summary(rag_chain: RunnableBinding) -> str:
     return response["answer"]
 
 
+# 起動の確認用エンドポイント
 @router.get("/")
 def read_root():
     return {"message": "Hello, FastAPI is running!"}
@@ -152,33 +153,33 @@ def analyze_pdf_from_bytes(
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
 
     # タイトルを生成
-    title = get_pdf_title(str(copy_pdf_path))
-    if any(
-        phrase in title.lower() for phrase in ["unable to extract", "unable to find"]
-    ):
-        title = None
-    else:
-        if (
-            "Based on the PDF content" in title
-            or "Based on the provided PDF content" in title
-        ):
-            if "However, I can suggest a possible title:" in title:
-                title = title.split("However, I can suggest a possible title:")[
-                    -1
-                ].strip()
-            else:
-                title = None  # 適切な提案がなかった場合は None にする
+    title = get_paper_title(copy_pdf_path)
+    # if any(
+    #     phrase in title.lower() for phrase in ["unable to extract", "unable to find"]
+    # ):
+    #     title = None
+    # else:
+    #     if (
+    #         "Based on the PDF content" in title
+    #         or "Based on the provided PDF content" in title
+    #     ):
+    #         if "However, I can suggest a possible title:" in title:
+    #             title = title.split("However, I can suggest a possible title:")[
+    #                 -1
+    #             ].strip()
+    #         else:
+    #             title = None  # 適切な提案がなかった場合は None にする
     # 要約を生成
     summary = generate_summary(rag_chain).replace("Summary: ", "")
 
-    # ベクトルデータベースに論文内容を追加
-    vector_store = load_vector_store()
-    vector_store.merge_from(index)
+    # # ベクトルデータベースに論文内容を追加
+    # vector_store = load_vector_store()
+    # vector_store.merge_from(index)
 
-    # ベクトルデータベースを保存
-    vector_store.save_local(VECTOR_STORE_DIR)
+    # # ベクトルデータベースを保存
+    # vector_store.save_local(VECTOR_STORE_DIR)
 
-    return {"pdf_id": pdf_id, "pdf_url": pdf_url, "title": title, "summary": summary}
+    return {"pdf_id": pdf_id, "pdf_url": pdf_url, "title": title, "summary": summary, "index": index}
 
 
 # PDFをアップロード
@@ -215,6 +216,9 @@ async def upload_pdf(
 
     if title is not None:
         metadata, openalex = fetch_metadata(title)
+        # メタデータが取得できていなかった場合，タイトルを追加
+        if "error" in metadata:
+            metadata["title"] = title
     else:
         metadata = {
             "title": None,
@@ -293,6 +297,14 @@ async def upload_pdf(
                 message="PDFの登録が完了しました．",
                 data=final_data,
             )
+
+        # ベクトルデータベースに論文内容を追加
+        index = pdf_info["index"]
+        vector_store = load_vector_store()
+        vector_store.merge_from(index)
+
+        # ベクトルデータベースを保存
+        vector_store.save_local(VECTOR_STORE_DIR)
 
     print(response)
     return response

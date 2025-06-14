@@ -30,6 +30,10 @@ if VECTOR_STORE_DIR.exists():
         embeddings,
         allow_dangerous_deserialization=True,
     )
+else:
+    raise FileNotFoundError(
+        f"Vector store directory {VECTOR_STORE_DIR} does not exist. Please ensure the vector store is initialized."
+    )
 
 
 def ask_llm(
