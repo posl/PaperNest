@@ -159,6 +159,7 @@ class VectorSearchResponseSchema(BaseModel):
 class PaperQuestionRequestSchema(BaseModel):
     question: str
     language: str = Field(description="ユーザが使用した言語(ja または en)")
+    paper_id: str
     category: str
 
 

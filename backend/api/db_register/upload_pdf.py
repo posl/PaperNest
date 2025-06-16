@@ -316,7 +316,7 @@ async def get_pdf(paper_id: str):
     pdf_path = UPLOAD_DIR / f"{paper_id}.pdf"
 
     if not pdf_path.exists():
-        raise HTTPException(status_code=404, detail="PDF not found.")
+        raise HTTPException(status_code=404, detail="PDFが見つかりません．")
 
     return FileResponse(
         path=pdf_path,

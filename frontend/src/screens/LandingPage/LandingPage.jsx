@@ -9,7 +9,7 @@ import { FloatingUploadButton } from "../../components/FloatingUploadButton";
 import { useLandingPageState } from "./hooks/useLandingPageState";
 import { ModalPaperList } from "../../components/ModalPaperList";
 import { summary } from "framer-motion/client";
-import { secureFetch } from "../../utils/apiClient"; 
+import { secureFetch } from "../../utils/apiClient";
 import { UploadingModal } from "../../components/UploadingModal";
 
 
@@ -33,7 +33,7 @@ export const LandingPage = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadStatus, setUploadStatus] = useState("uploading"); // 'uploading', 'success', 'error', 'duplicate'
 
-    
+
 
   const [tableData, setTableData] = useState([]);
 
@@ -137,10 +137,10 @@ export const LandingPage = () => {
     handleDragLeave,
     handleDrop,
   } = useLandingPageState(columns, {
-    currentCategory, 
-    refreshPapers: fetchPapers, 
-    setIsLoading: setIsUploading,        
-    setUploadProgress,                   
+    currentCategory,
+    refreshPapers: fetchPapers,
+    setIsLoading: setIsUploading,
+    setUploadProgress,
     setUploadStatus,
   });
 
@@ -187,7 +187,7 @@ export const LandingPage = () => {
   const handleQuestionSubmit = async (question) => {
     try {
       const token = localStorage.getItem("token");
-  
+
       const response = await fetch("http://localhost:8000/search", {
         method: "POST",
         headers: {
@@ -196,18 +196,18 @@ export const LandingPage = () => {
         },
         body: JSON.stringify({
           question,
-          language: "ja", // 言語は必要に応じて変更
+          language: "ja", // Todo: もう必要ないので，いつか消しましょう（SATD）
           category: currentCategory,
         }),
       });
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
         alert(data.detail || "検索に失敗しました。");
         return;
       }
-  
+
       setRecommendedPapers(data);
       setModalOpen(true);
     } catch (error) {
@@ -215,7 +215,7 @@ export const LandingPage = () => {
       alert("サーバーに接続できません。");
     }
   };
-  
+
 
   const fetchRelatedPaperIds = async (question) => {
     console.log("質問:", question);
@@ -242,8 +242,8 @@ export const LandingPage = () => {
     }
     setIsDeletePaperModalOpen(false);
   };
-  
-  
+
+
 
   return (
     <div className="bg-white flex flex-row justify-center w-full"
@@ -266,7 +266,7 @@ export const LandingPage = () => {
           setEditingOldName={setEditingOldName}
           onRenameCategory={handleRenameCategory}
         />
-        
+
         {/* Main content */}
       <div className="flex mt-[0px] w-full h-full">
         {/* Left sidebar */}
@@ -279,7 +279,7 @@ export const LandingPage = () => {
             handleCheckboxChange={handleCheckboxChange}
             handleApplyFilters={handleApplyFilters}
           />
-          
+
         </div>
 
         {/* Main content area */}
@@ -308,7 +308,7 @@ export const LandingPage = () => {
                 />
               );
             })()}
-            
+
 
             <ScrollBar
               orientation="vertical"
@@ -340,7 +340,7 @@ export const LandingPage = () => {
          isPdfOpen={isPdfOpen}
          setIsPdfOpen={setIsPdfOpen}
          isDragging={isDragging}
-         category={currentCategory} 
+         category={currentCategory}
          onUploadSuccess={fetchPapers}  />
 
         {/* 論文削除確認モーダル */}
