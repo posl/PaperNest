@@ -32,6 +32,8 @@ export const LandingPage = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadStatus, setUploadStatus] = useState("uploading"); // 'uploading', 'success', 'error', 'duplicate'
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchProgress, setSearchProgress] = useState(0);
 
 
 
@@ -184,37 +186,58 @@ export const LandingPage = () => {
   const [paperIdToDelete, setPaperIdToDelete] = useState(null);
 
   // --- 質問送信時の処理関数 ---
-  const handleQuestionSubmit = async (question) => {
-    try {
-      const token = localStorage.getItem("token");
+const handleQuestionSubmit = async (question) => {
+  setIsSearching(true);
+  setSearchProgress(0);
 
-      const response = await fetch("http://localhost:8000/search", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          question,
-          language: "ja", // Todo: もう必要ないので，いつか消しましょう（SATD）
-          category: currentCategory,
-        }),
-      });
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += 0.006;
+    setSearchProgress(Math.min(progress, 0.95));
+  }, 100);
 
-      const data = await response.json();
+  try {
+    const token = localStorage.getItem("token");
 
-      if (!response.ok) {
-        alert(data.detail || "検索に失敗しました。");
-        return;
-      }
+    const response = await fetch("http://localhost:8000/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        question,
+        language: "ja",
+        category: currentCategory,
+      }),
+    });
 
-      setRecommendedPapers(data);
-      setModalOpen(true);
-    } catch (error) {
-      console.error("検索APIエラー:", error);
-      alert("サーバーに接続できません。");
+    const data = await response.json();
+
+    clearInterval(interval);
+    setSearchProgress(1.0);
+
+    if (!response.ok) {
+      alert(data.detail || "検索に失敗しました。");
+      return;
     }
-  };
+
+    // ✅ ここではまだモーダル開かない
+    setRecommendedPapers(data);
+  } catch (error) {
+    clearInterval(interval);
+    console.error("検索APIエラー:", error);
+    alert("サーバーに接続できません。");
+  } finally {
+    // ✅ カメが歩ききるまで待ってからモーダル表示
+    setTimeout(() => {
+      setIsSearching(false); // カメを消す
+      setTimeout(() => {
+        setModalOpen(true); // そのあとにモーダル表示
+      }, 300); // ← fade-outアニメーション分
+    }, 500); // カメが1.0に達してから0.5秒くらい見せる
+  }
+};
 
 
   const fetchRelatedPaperIds = async (question) => {
@@ -363,6 +386,12 @@ export const LandingPage = () => {
               ? "このPDFはすでに登録されています"
               : "アップロードに失敗しました"
           }
+        />
+        <UploadingModal
+          show={isSearching}
+          progress={searchProgress}
+          status="uploading"
+          message="関連論文を検索中です..."
         />
       </div>
     </div>
