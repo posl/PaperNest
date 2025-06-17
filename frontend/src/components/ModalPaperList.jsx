@@ -62,7 +62,7 @@ export const ModalPaperList = ({ isOpen, onClose, papers }) => {
           >
             {paper.title}
             <span className="ml-2 text-xs text-gray-400">
-              (一致度：{paper.similarity})
+              (一致度：{paper.similarity.toFixed(1)})
             </span>
           </button>
         ))}
