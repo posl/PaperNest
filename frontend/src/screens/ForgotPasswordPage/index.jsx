@@ -78,10 +78,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white to-blue-200 px-4">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-blue-700 mb-6">
-          {step === "verify" ? "ユーザー確認" : "パスワード再設定"}
+        <h2 className="text-3xl font-bold text-center text-blue-800 mb-6" style={{ fontFamily: '"Abril Fatface", serif',textShadow: "1px 2px 4px rgba(0, 0, 0, 0.1)" }}>
+          {step === "verify" ? "Your Info" : "Reset Password"}
         </h2>
 
         {step === "verify" && (
