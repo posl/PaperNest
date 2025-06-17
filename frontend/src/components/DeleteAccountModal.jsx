@@ -13,7 +13,7 @@ export const DeleteAccountModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-xl shadow-xl ring-1 ring-gray-300 w-[340px]">
+      <div className="bg-white p-6 rounded-xl shadow-xl ring-1 ring-gray-300 w-[400px]">
         <h2 className="text-base font-medium text-gray-800 mb-3">
           <Icon icon="mdi:account-remove-outline" className="inline-block mr-2 text-red-600" />
           アカウントを削除してもよろしいですか？
