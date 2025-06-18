@@ -1,3 +1,4 @@
+import { Icon } from "@iconify/react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -78,8 +79,20 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white to-blue-200 px-4">
-      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-white to-blue-200 px-4">
+      {/* ロゴ部分 */}
+      <div className="w-full flex items-center px-6 mt-6" style={{ height: "70px" }}>
+        <Icon icon="file-icons:tortoisesvn" className="text-4xl text-cyan-500" />
+        <div className="h-10 w-px bg-gray-300 mx-4" />
+        <div
+          style={{ fontFamily: '"Abril Fatface", serif' }}
+          className="text-sky-600 text-3xl font-semibold tracking-wide"
+        >
+          PaperNest
+        </div>
+      </div>
+      <div className="flex-grow flex items-center justify-center">
+        <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
         <h2 className="text-3xl font-bold text-center text-blue-800 mb-6" style={{ fontFamily: '"Abril Fatface", serif',textShadow: "1px 2px 4px rgba(0, 0, 0, 0.1)" }}>
           {step === "verify" ? "Your Info" : "Reset Password"}
         </h2>
@@ -146,6 +159,12 @@ export default function ForgotPasswordPage() {
         >
           {message}
         </p>
+        <div className="mt-4 mb-2 flex justify-between text-sm text-blue-500">
+          <p onClick={() => window.history.back()} className="hover:underline cursor-pointer">
+            戻る
+          </p>
+        </div>
+        </div>
       </div>
     </div>
   );

@@ -183,6 +183,11 @@ export default function SignUpPage() {
         >
           アカウント作成
         </button>
+        <div className="mt-4 mb-2 flex justify-between text-sm text-blue-500">
+          <p onClick={() => window.history.back()} className="hover:underline cursor-pointer">
+            戻る
+          </p>
+        </div>
         </div>
       </div>
     </div>

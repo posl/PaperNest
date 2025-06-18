@@ -16,12 +16,12 @@ import { UploadingModal } from "../../components/UploadingModal";
 export const LandingPage = () => {
   // Filter options data
   const filterOptions = [
-    { id: "title", label: "title" },
-    { id: "authors", label: "authors" },
-    { id: "year", label: "year" },
-    { id: "conference", label: "conference" },
-    { id: "core_rank", label: "core-rank" },
-    // { id: "book", label: "book" },
+    { id: "title", label: "Title" },
+    { id: "authors", label: "Authors" },
+    { id: "year", label: "Year" },
+    { id: "conference", label: "Conference" },
+    { id: "core_rank", label: "Core rank" },
+    { id: "citations", label: "Citations" },
   ];
 
     // Tabs state
@@ -112,12 +112,12 @@ export const LandingPage = () => {
 
   // Table columns
   const columns = [
-    { id: "title", label: "title" },
-    { id: "authors", label: "author" },
-    { id: "year", label: "year" },
-    { id: "conference", label: "conference" },
-    { id: "core_rank", label: "core_rank" },
-    // { id: "book", label: "book" },
+    { id: "title", label: "Title" },
+    { id: "authors", label: "Authors" },
+    { id: "year", label: "Year" },
+    { id: "conference", label: "Conference" },
+    { id: "core_rank", label: "Core rank" },
+    { id: "citations", label: "Citations" },
   ];
 
   const [isLoading, setIsLoading] = useState(false);
