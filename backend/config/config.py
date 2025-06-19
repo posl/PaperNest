@@ -3,7 +3,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-TOP_DIR = Path(__file__).resolve().parent.parent
+TOP_DIR = Path(__file__).resolve().parent.parent.parent
 UPLOAD_DIR = TOP_DIR / "upload"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 VECTOR_STORE_DIR = Path(__file__).resolve().parent.parent.parent / "faiss_index"
