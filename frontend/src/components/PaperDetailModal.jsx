@@ -104,8 +104,8 @@ export const PaperDetailModal = ({
               <p><strong>Author:</strong> {selectedRow.authors || "N/A"}</p>
               <p><strong>Year:</strong> {selectedRow.year || "N/A"}</p>
               <p><strong>Conference:</strong> {selectedRow.conference || "N/A"}</p>
-              <p><strong>Core-rank:</strong> {selectedRow.core_rank || "N/A"}</p>
-              {/* <p><strong>Book:</strong> {selectedRow.book || "N/A"}</p> */}
+              <p><strong>Core Rank:</strong> {selectedRow.core_rank || "N/A"}</p>
+              <p><strong>Citations:</strong> {selectedRow.citations || "N/A"}</p>
             </div>
 
             {/* Abstract */}
