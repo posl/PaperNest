@@ -35,15 +35,31 @@ def is_alnum_symbol(s):
     return re.fullmatch(r"[!-~]+", s) is not None
 
 
+# HyDE (Hybrid Document Embedding) を使用してベクトルストアを作成
+def generate_HyDE_answer(
+    query: str):
+    client = Groq(api_key=GROQ_API_KEY)
+    system_prompt = "You are an expert research assistant."
+    user_prompt = f"Generate accurate responses to the following questions.\n\n{query}"
+    chat_completion = client.chat.completions.create(
+        model=CHAT_MODEL,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+    )
+    print(f"Original question: {query}")
+    new_query = chat_completion.choices[0].message.content
+    print(f"Generated answer: {new_query}")
+    return new_query
 
 
 # LLMに質問を投げ，回答を生成し，ベクトル検索を行う
 def get_similary_papers(
     query: str, vectorstore: FAISS, llm: ChatGroq, k: int, user_id: int, category: str
 ):
-    vectorstoreindex = VectorStoreIndexWrapper(vectorstore=vectorstore)
     # LLMに質問を投げ，回答を生成
-    answer = vectorstoreindex.query(query, llm)
+    answer = generate_HyDE_answer(query)
     print(f"Answer: {answer}")
 
     results = []
