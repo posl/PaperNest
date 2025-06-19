@@ -5,7 +5,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from sqlalchemy.orm import Session
 
-from backend.config import EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
+from backend.config.config import EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
 from backend.database.database import get_db
 from backend.models.models import Paper, User
 from backend.schema.schema import ResearchThemeDeleteResponseSchema

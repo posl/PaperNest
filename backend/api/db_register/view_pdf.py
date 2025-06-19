@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from backend.config import UPLOAD_DIR
+from backend.config.config import UPLOAD_DIR
 
 router = APIRouter()  # インスタンス作成
 

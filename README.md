@@ -19,7 +19,7 @@ REFRESH_TOKEN_EXPIRE_DAYS=fugafuga
 
 ### 2. コンテナの作成，機動
 
-```bach
+```bach 
 cd .devcontainer
 docker compose build --no-cache
 docker compose up

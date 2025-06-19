@@ -1,10 +1,8 @@
 import hashlib
-import os
 import uuid
 from typing import Dict
 
 import fitz
-from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from langchain.chains import create_retrieval_chain
@@ -23,18 +21,25 @@ from sqlalchemy.orm import Session
 from backend.api.db_register.db_register import register_paper
 from backend.api.db_register.get_paper_title import get_paper_title
 from backend.api.db_register.metadata_fetcher import fetch_metadata
-from backend.config import BASE_URL, CHAT_MODEL, EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
+from backend.config.config import (
+    BASE_URL,
+    CHAT_MODEL,
+    EMBEDDINGS_MODEL,
+    GROQ_API_KEY,
+    UPLOAD_DIR,
+    VECTOR_STORE_DIR,
+)
 from backend.database.database import get_db
 from backend.models.models import Paper, User
 from backend.schema.schema import PaperSchema, UploadPDFResponseSchema
 from backend.utils.security import get_current_user
+from backend.utils.vector_store import get_vector_store
+from backend.utils.tranalate import translate
 
 router = APIRouter()  # インスタンス作成
 
 # GroqのAPI keyを取得
-load_dotenv()
-groq_api_key = os.environ["GROQ_API_KEY"]
-groq_chat = ChatGroq(groq_api_key=groq_api_key, model_name=CHAT_MODEL)
+groq_chat = ChatGroq(groq_api_key=GROQ_API_KEY, model_name=CHAT_MODEL)
 
 system_prompt = "You are a helpful assistant. Please respond based on the content of the paper PDF.\n\n{context}"
 prompt = ChatPromptTemplate.from_messages(
@@ -48,16 +53,21 @@ embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
 
 
 # ベクトルデータベースをロード
-def load_vector_store() -> FAISS:
-    if os.path.exists(VECTOR_STORE_DIR):
-        vector_store = FAISS.load_local(VECTOR_STORE_DIR, embeddings, allow_dangerous_deserialization=True)
-    else:
-        documents = [
-            Document(page_content="", metadata={"paper_id": "", "user_id": "", "category": ""})
-        ]
-        vector_store = FAISS.from_documents(documents, embeddings)
+# def load_vector_store() -> FAISS:
+#     if os.path.exists(VECTOR_STORE_DIR):
+#         vector_store = FAISS.load_local(
+#             VECTOR_STORE_DIR, embeddings, allow_dangerous_deserialization=True
+#         )
+#     else:
+#         documents = [
+#             Document(
+#                 page_content="",
+#                 metadata={"paper_id": "", "user_id": "", "category": ""},
+#             )
+#         ]
+#         vector_store = FAISS.from_documents(documents, embeddings)
 
-    return vector_store
+#     return vector_store
 
 
 # PDFファイルからテキストを抽出
@@ -73,7 +83,10 @@ def read_text_from_pdf(pdf_path):
 # PDFのテキストを分割
 def split_pdf_text(pdf_text: str) -> list:
     # チャンク間でoverlappingさせながらテキストを分割
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=3000, chunk_overlap=50,)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=3000,
+        chunk_overlap=50,
+    )
     # テキストを分割
     splited_text = text_splitter.split_text(pdf_text)
     return splited_text
@@ -84,7 +97,10 @@ def embedding_text(
     splited_text: list, pdf_id: str, user_id: int, category: str
 ) -> FAISS:
     documents = [
-        Document(page_content=text, metadata={"paper_id": pdf_id, "user_id": user_id, "category": category})
+        Document(
+            page_content=text,
+            metadata={"paper_id": pdf_id, "user_id": user_id, "category": category},
+        )
         for text in splited_text
     ]
     index = FAISS.from_documents(documents, embedding=embeddings)
@@ -179,7 +195,16 @@ def analyze_pdf_from_bytes(
     # # ベクトルデータベースを保存
     # vector_store.save_local(VECTOR_STORE_DIR)
 
-    return {"pdf_id": pdf_id, "pdf_url": pdf_url, "title": title, "summary": summary, "index": index}
+    # 要約を日本語に翻訳
+    summary = translate(summary, "ja")
+
+    return {
+        "pdf_id": pdf_id,
+        "pdf_url": pdf_url,
+        "title": title,
+        "summary": summary,
+        "index": index,
+    }
 
 
 # PDFをアップロード
@@ -202,7 +227,11 @@ async def upload_pdf(
         raise HTTPException(status_code=400, detail="PDFが空です．")
 
     # 重複チェック：同じカテゴリとハッシュのPDFが既に存在するか？
-    existing = (db.query(Paper).filter_by(category=category, hash=pdf_hash, user_id=current_user.id).first())
+    existing = (
+        db.query(Paper)
+        .filter_by(category=category, hash=pdf_hash, user_id=current_user.id)
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=409, detail="このPDFはすでに登録されています．")
 
@@ -300,7 +329,7 @@ async def upload_pdf(
 
         # ベクトルデータベースに論文内容を追加
         index = pdf_info["index"]
-        vector_store = load_vector_store()
+        vector_store = get_vector_store()
         vector_store.merge_from(index)
 
         # ベクトルデータベースを保存

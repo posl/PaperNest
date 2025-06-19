@@ -7,7 +7,7 @@ from backend.database.database import get_db
 from backend.utils.security import verify_password, get_current_user
 from backend.schema.schema import AccountDeleteRequest, AccountDeleteResponse
 from backend.models.models import User, Paper
-from backend.config import EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
+from backend.config.config import EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
 
 router = APIRouter()
 

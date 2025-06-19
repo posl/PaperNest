@@ -1,7 +1,5 @@
-import os
 import re
 
-from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException
 from groq import Groq
 from langchain.chains import create_retrieval_chain
@@ -11,9 +9,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_groq import ChatGroq
-from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 
-from backend.config import CHAT_MODEL, EMBEDDINGS_MODEL, VECTOR_STORE_DIR
+from backend.config.config import CHAT_MODEL, GROQ_API_KEY
 from backend.database.database import SessionLocal
 from backend.models.models import Paper, User
 from backend.schema.schema import (
@@ -21,36 +18,23 @@ from backend.schema.schema import (
     PaperQuestionResponseSchema,
 )
 from backend.utils.security import get_current_user
+from backend.utils.tranalate import translate
+from backend.utils.vector_store import get_vector_store
 
 router = APIRouter()  # インスタンス作成
 
-# GroqのAPI keyを取得
-load_dotenv()
-groq_api_key = os.environ["GROQ_API_KEY"]
-groq_chat = ChatGroq(
-    groq_api_key=groq_api_key,
-    model_name=CHAT_MODEL,
-)
 
-system_prompt = "You are a helpful assistant. Please respond based on the content of the paper PDF.\n\n{context}"
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", system_prompt),
-        ("human", "{input}"),
-    ]
-)
-
-embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
-if VECTOR_STORE_DIR.exists():
-    vector_store = FAISS.load_local(
-        VECTOR_STORE_DIR,
-        embeddings,
-        allow_dangerous_deserialization=True,
-    )
-else:
-    raise FileNotFoundError(
-        f"Vector store directory {VECTOR_STORE_DIR} does not exist. Please ensure the vector store isinitialized."
-    )
+# embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
+# if VECTOR_STORE_DIR.exists():
+#     vector_store = FAISS.load_local(
+#         VECTOR_STORE_DIR,
+#         embeddings,
+#         allow_dangerous_deserialization=True,
+#     )
+# else:
+#     raise FileNotFoundError(
+#         f"Vector store directory {VECTOR_STORE_DIR} does not exist. Please ensure the vector store isinitialized."
+#     )
 
 
 # 英数字記号のみの文字列かどうかをチェック
@@ -60,7 +44,7 @@ def is_alnum_symbol(s):
 
 # クエリの翻訳
 def translate_query(question: str) -> str:
-    client = Groq(api_key=groq_api_key)
+    client = Groq(api_key=GROQ_API_KEY)
     system_prompt = "You are an excellent translator."
     user_prompt = f"Please translate the following text into English. However, please include only thetranslation in the output. Also, if the following text is already written in English, pleaseoutput it as is.\n\n{question}"
     chat_completion = client.chat.completions.create(
@@ -92,7 +76,21 @@ def generate_answer(rag_chain: RunnableBinding, question: str) -> str:
 
 
 # RAGチェーンによる回答を生成
-def get_rag_answer(question: str, paper_id: str, user_id: int, category: str) -> str:
+def get_rag_answer(
+    vector_store: FAISS, question: str, paper_id: str, user_id: int, category: str
+) -> str:
+    groq_chat = ChatGroq(
+        groq_api_key=GROQ_API_KEY,
+        model_name=CHAT_MODEL,
+    )
+    system_prompt = "You are a helpful assistant. Please respond based on the content of the paper PDF.\n\n{context}"
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system_prompt),
+            ("human", "{input}"),
+        ]
+    )
+
     # ユーザーIDとカテゴリーでフィルタリング
     filter = {
         "paper_id": paper_id,
@@ -118,7 +116,10 @@ async def upload_pdf(
 
     # 質問が英語以外の言語の場合，質問を英語翻訳して回答させる
     if not is_alnum_symbol(question):
-        question = translate_query(question)
+        question = translate(question, "en")
+
+    # ベクトルストアを取得
+    vector_store = get_vector_store()
 
     # 論文タイトルをデータベースから取得し，クエリに追加
     db = SessionLocal()
@@ -140,11 +141,9 @@ async def upload_pdf(
     db.close()
 
     # RAGチェーンを使用して回答を生成
-    answer = get_rag_answer(question, paper_id, user_id, category)
+    answer = get_rag_answer(vector_store, question, paper_id, user_id, category)
     if not answer:
-        raise HTTPException(
-            status_code=500, detail="回答の生成に失敗しました．"
-        )
+        raise HTTPException(status_code=500, detail="回答の生成に失敗しました．")
 
     return PaperQuestionResponseSchema(
         llm_answer=answer,

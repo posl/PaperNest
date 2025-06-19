@@ -1,40 +1,33 @@
-import os
 import re
 
-from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException
 from groq import Groq
 from langchain.indexes.vectorstore import VectorStoreIndexWrapper
 from langchain_community.vectorstores import FAISS
 from langchain_groq import ChatGroq
-from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 
-from backend.config import CHAT_MODEL, EMBEDDINGS_MODEL, VECTOR_STORE_DIR
+from backend.config.config import CHAT_MODEL, GROQ_API_KEY
 from backend.database.database import SessionLocal
 from backend.models.models import Paper, User
 from backend.schema.schema import VectorSearchRequestSchema, VectorSearchResponseSchema
 from backend.utils.security import get_current_user
+from backend.utils.tranalate import translate
+from backend.utils.vector_store import get_vector_store
 
 router = APIRouter()  # インスタンス作成
 
-load_dotenv()
-groq_api_key = os.environ["GROQ_API_KEY"]
-llm = ChatGroq(
-    groq_api_key=groq_api_key,
-    model_name=CHAT_MODEL,
-)
 
-embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
-if VECTOR_STORE_DIR.exists():
-    vector_store = FAISS.load_local(
-        VECTOR_STORE_DIR,
-        embeddings,
-        allow_dangerous_deserialization=True,
-    )
-else:
-    raise FileNotFoundError(
-        f"Vector store directory {VECTOR_STORE_DIR} does not exist. Please ensure the vector store is initialized."
-    )
+# embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
+# if VECTOR_STORE_DIR.exists():
+#     vector_store = FAISS.load_local(
+#         VECTOR_STORE_DIR,
+#         embeddings,
+#         allow_dangerous_deserialization=True,
+#     )
+# else:
+#     raise FileNotFoundError(
+#         f"Vector store directory {VECTOR_STORE_DIR} does not exist. Please ensure the vector store is initialized."
+#     )
 
 
 # 英数字記号のみの文字列かどうかをチェック
@@ -42,22 +35,6 @@ def is_alnum_symbol(s):
     return re.fullmatch(r"[!-~]+", s) is not None
 
 
-# クエリの翻訳
-def translate_query(question: str) -> str:
-    client = Groq(api_key=groq_api_key)
-    system_prompt = "You are an excellent translator."
-    user_prompt = f"Please translate the following text into English. However, please include only thetranslation in the output. Also, if the following text is already written in English, pleaseoutput it as is.\n\n{question}"
-    chat_completion = client.chat.completions.create(
-        model=CHAT_MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-    )
-    print(f"Original question: {question}")
-    new_question = chat_completion.choices[0].message.content
-    print(f"Translated question: {new_question}")
-    return new_question
 
 
 # LLMに質問を投げ，回答を生成し，ベクトル検索を行う
@@ -113,14 +90,18 @@ def get_similary_papers(
                             chunk_text=res.page_content,
                         )
                     )
-                    print(f"Debug info: {paper.paper_id}, {paper.title}, {paper.pdf_url}")
+                    print(
+                        f"Debug info: {paper.paper_id}, {paper.title}, {paper.pdf_url}"
+                    )
                 else:
                     raise HTTPException(
-                        status_code=404, detail=f"論文{paper_id}が見つかりませんでした．"
+                        status_code=404,
+                        detail=f"論文{paper_id}が見つかりませんでした．",
                     )
             except Exception as e:
                 raise HTTPException(
-                    status_code=500, detail=f"データベースからの取得中にエラーが発生しました: {e}"
+                    status_code=500,
+                    detail=f"データベースからの取得中にエラーが発生しました: {e}",
                 )
 
     db.close()
@@ -137,11 +118,17 @@ async def vector_search(
     user_id = current_user.id
     question = query.question
     category = query.category
+    llm = ChatGroq(
+        groq_api_key=GROQ_API_KEY,
+        model_name=CHAT_MODEL,
+    )
 
     # 質問が英語以外の言語の場合，質問を英語翻訳して回答させる
     if not is_alnum_symbol(question):
-        question = translate_query(question)
+        question = translate(question, "en")
 
+    # ベクトルストアを取得
+    vector_store = get_vector_store()
 
     return get_similary_papers(
         query=question,
