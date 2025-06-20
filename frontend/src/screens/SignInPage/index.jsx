@@ -10,12 +10,19 @@ export default function SignInPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  // useEffect(() => {
+  //   // ログイン済みなら /app にリダイレクト
+  //   if (isAuthenticated) {
+  //     navigate("/app", { replace: true });
+  //   }
+  // }, [isAuthenticated, navigate]);
+
   useEffect(() => {
-    // ログイン済みなら /app にリダイレクト
-    if (isAuthenticated) {
-      navigate("/app", { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
+  // :チェックマーク_緑: サインインページに来た時点で強制ログアウトする
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  setIsAuthenticated(false);
+  }, [setIsAuthenticated]);
 
   const toHalfWidth = (str) =>
     str.replace(/[！-～]/g, (ch) =>
@@ -28,7 +35,7 @@ export default function SignInPage() {
     formData.append("password", password.trim());
 
     try {
-      const response = await fetch("http://localhost:8000/login", {
+      const response = await fetch("http://192.168.35.242:8000/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",

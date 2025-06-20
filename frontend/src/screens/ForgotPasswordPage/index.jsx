@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/reset/verify", {
+      const res = await fetch("http://192.168.35.242:8000/reset/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, elementary_school: schoolName }),
@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/reset/password", {
+      const res = await fetch("http://192.168.35.242:8000/reset/password", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, new_password: newPassword }),

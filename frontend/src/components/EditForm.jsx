@@ -144,7 +144,7 @@ export const EditForm = ({
               }
 
               try {
-                const response = await fetch("http://localhost:8000/papers/update", {
+                const response = await fetch("http://192.168.35.242:8000/papers/update", {
                   method: "PUT",
                   headers: {
                     "Content-Type": "application/json",

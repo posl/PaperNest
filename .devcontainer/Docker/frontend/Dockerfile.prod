@@ -1,0 +1,13 @@
+ARG NODE_VER
+FROM node:${NODE_VER}
+
+WORKDIR /workspace/frontend
+
+COPY frontend /workspace/frontend
+
+RUN npm install && npm run build
+
+# `serve` を使って静的ファイルをホスト
+RUN npm install -g serve
+
+CMD ["serve", "-s", "dist", "-l", "3000"]

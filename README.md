@@ -27,7 +27,7 @@ docker compose up
 
 ### 3. Webにアクセス
 
-backend -> http://localhost:8000/
+backend -> http://192.168.35.242:8000/
 frontend -> http://localhost:3000/
 
 

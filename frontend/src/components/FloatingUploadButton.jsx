@@ -35,7 +35,7 @@ export const FloatingUploadButton = ({ isPdfOpen, setIsPdfOpen, isDragging, cate
     }, 100);
 
     try {
-      const res = await fetch("http://localhost:8000/upload", {
+      const res = await fetch("http://192.168.35.242:8000/upload", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

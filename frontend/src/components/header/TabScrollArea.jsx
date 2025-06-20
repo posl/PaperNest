@@ -78,7 +78,7 @@ export const TabScrollArea = ({
                   if (!tab.name.trim()) return;
                   try {
                     const token = localStorage.getItem("token");
-                    await fetch("http://localhost:8000/research_theme/update", {
+                    await fetch("http://192.168.35.242:8000/research_theme/update", {
                       method: "PUT",
                       headers: {
                         "Content-Type": "application/json",
@@ -101,7 +101,7 @@ export const TabScrollArea = ({
                   if (e.key !== "Enter" || !tab.name.trim()) return;
                   try {
                     const token = localStorage.getItem("token");
-                    await fetch("http://localhost:8000/research_theme/update", {
+                    await fetch("http://192.168.35.242:8000/research_theme/update", {
                       method: "PUT",
                       headers: {
                         "Content-Type": "application/json",
