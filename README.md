@@ -17,7 +17,7 @@ git clone https://github.com/posl/PaperNest.git
 
 ### 2. .env の作成
 
-.devcontainer/Docker/backend に.env ファイルを作成
+.devcontainer/Docker/backend に.env ファイルを作成\\
 Groq の API キーを使用します（無料で使用可能！）．
 
 .env ファイルの形式
