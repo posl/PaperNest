@@ -45,3 +45,6 @@ papers.db
 faiss_index/
 upload/
 pdf/
+
+# slides
+*.pptx
