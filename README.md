@@ -17,8 +17,9 @@ git clone https://github.com/posl/PaperNest.git
 
 ### 2. .env の作成
 
-.devcontainer/Docker/backend に.env ファイルを作成\\
-Groq の API キーを使用します（無料で使用可能！）．
+.devcontainer/Docker/backend に.env ファイルを作成
+
+[Groq](https://groq.com/)のAPI キーを使用します（無料で使用可能！）．
 
 .env ファイルの形式
 
@@ -40,8 +41,10 @@ docker compose up
 
 ### 4. Web にアクセス
 
-backend -> http://localhost:8000/\\
-frontend -> http://localhost:3000/\\
+backend -> http://localhost:8000/
+
+frontend -> http://localhost:3000/
+
 Swagger API -> http://localhost:8000/assets
 
 </details>
