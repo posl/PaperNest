@@ -40,8 +40,8 @@ docker compose up
 
 ### 4. Web にアクセス
 
-backend -> http://localhost:8000/
-frontend -> http://localhost:3000/
+backend -> http://localhost:8000/\\
+frontend -> http://localhost:3000/\\
 Swagger API -> http://localhost:8000/assets
 
 </details>
