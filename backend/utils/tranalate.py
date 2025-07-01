@@ -9,7 +9,7 @@ LANGUAGES = {"ja": "Japanese", "en": "English"}
 def translate(question: str, language: str) -> str:
     client = Groq(api_key=GROQ_API_KEY)
     system_prompt = "You are an excellent translator."
-    user_prompt = f"Please translate the following text into {LANGUAGES[language]}. However, please include only thetranslation in the output. Also, if the following text is already written in {LANGUAGES[language]}, pleaseoutput it as is.\n\n{question}"
+    user_prompt = f"Please translate the following text into {LANGUAGES[language]}. However, please include only the translation in the output. Also, if the following text is already written in {LANGUAGES[language]}, pleaseoutput it as is.\n\n{question}"
     chat_completion = client.chat.completions.create(
         model=CHAT_MODEL,
         messages=[
