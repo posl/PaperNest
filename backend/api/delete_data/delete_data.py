@@ -43,7 +43,7 @@ def delete_paper(paper_id: str, db: Session = Depends(get_db)):
     if matching_ids:
         # for matching_id in matching_ids:
         vector_store.delete(matching_ids)
-        print(f"Len of vector store after deletion: {len(vector_store.docstore._dict)}")
+        # print(f"Len of vector store after deletion: {len(vector_store.docstore._dict)}")
         vector_store.save_local(VECTOR_STORE_DIR)
     else:
         raise HTTPException(status_code=404, detail="ベクトルデータベース内に該当論文が見つかりませんでした．",)

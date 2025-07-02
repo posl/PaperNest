@@ -38,7 +38,7 @@ from backend.models.models import Base
 def initialize_vector_store():
     if not VECTOR_STORE_DIR.exists():
         VECTOR_STORE_DIR.mkdir(parents=True, exist_ok=True)
-        print("ベクトルストア初期化中...")
+        # print("ベクトルストア初期化中...")
         embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
         documents = [
             Document(
@@ -48,7 +48,7 @@ def initialize_vector_store():
         ]
         vector_store = FAISS.from_documents(documents, embeddings)
         vector_store.save_local(VECTOR_STORE_DIR)
-        print("ベクトルストア初期化完了")
+        # print("ベクトルストア初期化完了")
 
 
 @asynccontextmanager

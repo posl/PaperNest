@@ -11,7 +11,7 @@ OPENALEX_API_URL = "https://api.openalex.org/works"
 # メタデータを取得する関数
 def fetch_metadata(title: str) -> dict:
     metadata, openalex = fetch_metadata_from_title(title)
-    print(f"Metadata fetched: {metadata}")
+    # print(f"Metadata fetched: {metadata}")
 
     if "error" in metadata:
         return metadata, openalex
@@ -24,7 +24,7 @@ def fetch_metadata(title: str) -> dict:
 
         if doi:
             bibtex = fetch_bibtex_from_doi(doi)
-            print(f"BibTeX fetched: {bibtex}")
+            # print(f"BibTeX fetched: {bibtex}")
 
             # bibtexのフィールドから会議かジャーナルかを判定
             entry_type = extract_bibtex_type(bibtex)
@@ -67,7 +67,7 @@ def similarity(t1: str, t2: str) -> float:
 def fetch_metadata_from_openalex(title: str, similarity_threshold: float) -> dict:
     params = {
         "search": title,
-        "per-page": 5
+        "per-page": 3
     }
 
     try:
@@ -90,9 +90,9 @@ def fetch_metadata_from_openalex(title: str, similarity_threshold: float) -> dic
 
         for item in results:
             item_title = item.get("title", "")
-            print(f"[OpenAlex] Evaluating item: {item_title}")
+            # print(f"[OpenAlex] Evaluating item: {item_title}")
             score = similarity(title, item_title)
-            print(f"[OpenAlex] Similarity score for '{item_title}': {score}")
+            # print(f"[OpenAlex] Similarity score for '{item_title}': {score}")
 
             if (
                 score > best_score or
@@ -119,7 +119,7 @@ def fetch_metadata_from_openalex(title: str, similarity_threshold: float) -> dic
 def fetch_metadata_from_title(title: str, similarity_threshold=0.95) -> dict:
     params = {
         "query.title": title,
-        "rows": 5,
+        "rows": 3,
         "sort": "score"
     }
 
@@ -135,7 +135,7 @@ def fetch_metadata_from_title(title: str, similarity_threshold=0.95) -> dict:
         items = data.get("message", {}).get("items", [])
 
         if not items:
-            print("No items found in Crossref, using OpenAlex.")
+            # print("No items found in Crossref, using OpenAlex.")
             return fetch_metadata_from_openalex(title, similarity_threshold), True
 
         best_item = None
@@ -158,9 +158,9 @@ def fetch_metadata_from_title(title: str, similarity_threshold=0.95) -> dict:
             if not item_title or item.get("type") == "posted-content":
                 continue
 
-            print(f"[Crossref] Evaluating item: {item_title}")
+            # print(f"[Crossref] Evaluating item: {item_title}")
             score = similarity(title, item_title)
-            print(f"[Crossref] Similarity score for '{item_title}': {score}")
+            # print(f"[Crossref] Similarity score for '{item_title}': {score}")
 
             if (score > best_score or
                 (score == best_score and best_item and is_newer_crossref(item, best_item))):
@@ -168,7 +168,7 @@ def fetch_metadata_from_title(title: str, similarity_threshold=0.95) -> dict:
                 best_score = score
 
         if best_score < similarity_threshold:
-            print(f"Low similarity ({best_score}) in Crossref. Trying OpenAlex...")
+            # print(f"Low similarity ({best_score}) in Crossref. Trying OpenAlex...")
             return fetch_metadata_from_openalex(title, similarity_threshold), True
 
         if best_item:
@@ -297,4 +297,4 @@ if __name__ == "__main__":
     title = "Using Gameplay Videos for Detecting Issues in Video Games"
     # タイトルからメタデータを取得
     metadata = fetch_metadata(title)
-    print(f"\nFinal metadata with core rank:\n{metadata}")
+    # print(f"\nFinal metadata with core rank:\n{metadata}")

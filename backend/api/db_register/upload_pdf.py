@@ -239,7 +239,7 @@ async def upload_pdf(
     pdf_info = analyze_pdf_from_bytes(pdf_bytes, current_user.id, category)
     # print(pdf_info)
     title = pdf_info["title"]
-    print(f"PDF Title: {title}")
+    # print(f"PDF Title: {title}")
 
     openalex = False
 
@@ -335,7 +335,7 @@ async def upload_pdf(
         # ベクトルデータベースを保存
         vector_store.save_local(VECTOR_STORE_DIR)
 
-    print(response)
+    # print(response)
     return response
 
 

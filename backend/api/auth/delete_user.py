@@ -32,7 +32,7 @@ def delete_account(
             if os.path.exists(pdf_path):
                 try:
                     os.remove(pdf_path)
-                    print(f"削除しました: {pdf_path}")
+                    # print(f"削除しました: {pdf_path}")
                     # ベクトルデータベースから削除
                     matching_ids = [
                         doc_id
@@ -42,9 +42,9 @@ def delete_account(
                     if matching_ids:
                         # for matching_id in matching_ids:
                         vector_store.delete(matching_ids)
-                        print(
-                            f"Len of vector store after deletion: {len(vector_store.docstore._dict)}"
-                        )
+                        # print(
+                        #     f"Len of vector store after deletion: {len(vector_store.docstore._dict)}"
+                        # )
                     else:
                         raise HTTPException(
                             status_code=404,
