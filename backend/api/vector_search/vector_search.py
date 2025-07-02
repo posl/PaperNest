@@ -121,7 +121,7 @@ def get_similary_papers(
                 )
 
     db.close()
-    print(f"Debug info: {debug}")
+    # print(f"Debug info: {debug}")
     return results
 
 
