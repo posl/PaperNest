@@ -37,6 +37,8 @@ def fetch_metadata(title: str) -> dict:
                 for author in metadata["authors"]:
                     if author != '':
                         bibtex = rewrite_bibtex_label(bibtex, metadata["authors"][0], metadata["year"], acronym)
+                        if acronym != "unknown":
+                            metadata["conference"] = acronym
                         break
 
     else:
