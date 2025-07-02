@@ -229,7 +229,7 @@ async def upload_pdf(
     # 重複チェック：同じカテゴリとハッシュのPDFが既に存在するか？
     existing = (
         db.query(Paper)
-        .filter_by(category=category, hash=pdf_hash, user_id=current_user.id)
+        .filter_by(user_id=current_user.id, category=category, hash=pdf_hash)
         .first()
     )
     if existing:
