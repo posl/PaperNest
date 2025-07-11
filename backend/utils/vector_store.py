@@ -1,7 +1,7 @@
 from functools import lru_cache
 
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
 from backend.config.config import EMBEDDINGS_MODEL, VECTOR_STORE_DIR
 

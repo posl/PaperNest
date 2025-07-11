@@ -61,6 +61,10 @@ def preprocess(text: str) -> str:
     # 英数字のみを抽出（スペースや記号を削除）
     return re.sub(r'[^a-zA-Z0-9]', '', text.lower())
 
+def preprocess_not_lower(text: str) -> str:
+    # 英数字のみを抽出（スペースや記号を削除）
+    return re.sub(r'[^a-zA-Z0-9]', '', text)
+
 # 類似度計算（完全一致に近い比較）
 def similarity(t1: str, t2: str) -> float:
     return SequenceMatcher(None, preprocess(t1), preprocess(t2)).ratio()
@@ -226,12 +230,13 @@ def get_core_rank_and_acronym(conference_name: str, entry_type: str) -> tuple[st
         df = df.dropna(subset=['Title', 'Acronym'])
 
         normalized_conf_name = preprocess(conference_name)
+        normalized_conf_name_not_lower = preprocess_not_lower(conference_name)
 
         for _, row in df.iterrows():
             title = preprocess(str(row['Title']))
-            acronym = preprocess(str(row['Acronym']))
+            acronym = row['Acronym']
 
-            if title in normalized_conf_name or acronym in normalized_conf_name:
+            if title in normalized_conf_name or acronym in normalized_conf_name_not_lower:
                 return row.get('Rank', 'Unknown'), row.get('Acronym', 'unknown')
 
         return "Unknown", "unknown"

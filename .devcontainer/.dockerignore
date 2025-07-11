@@ -1,0 +1,15 @@
+# PythonやNode系のキャッシュ
+__pycache__/
+*.pyc
+node_modules/
+
+# VSCode関連
+.vscode/
+
+# Git
+.git/
+
+# その他
+.DS_Store
+.env
+.venv/
