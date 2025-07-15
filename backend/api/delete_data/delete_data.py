@@ -16,11 +16,12 @@ router = APIRouter()
 @router.delete("/papers/delete/{paper_id}", response_model=PaperDeleteResponseSchema)
 def delete_paper(paper_id: str, db: Session = Depends(get_db)):
     paper = db.query(Paper).filter(Paper.paper_id == paper_id).first()
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
-    vector_store = FAISS.load_local(VECTOR_STORE_DIR, embeddings, allow_dangerous_deserialization=True)
 
     if not paper:
         raise HTTPException(status_code=404, detail="指定された論文は見つかりませんでした．")
+
+    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
+    vector_store = FAISS.load_local(VECTOR_STORE_DIR, embeddings, allow_dangerous_deserialization=True)
 
     # PDFファイル削除処理
     pdf_path = os.path.join(UPLOAD_DIR, f"{paper_id}.pdf")
@@ -35,17 +36,14 @@ def delete_paper(paper_id: str, db: Session = Depends(get_db)):
     db.commit()
 
     # ベクトルデータベースから削除
-    matching_ids = [
-        doc_id
-        for doc_id, doc in vector_store.docstore._dict.items()
-        if doc.metadata["paper_id"] == paper_id
-    ]
-    if matching_ids:
-        # for matching_id in matching_ids:
+    if paper.chunk_count is None:
+        raise HTTPException(status_code=500, detail="チャンク数が記録されていません．")
+
+    matching_ids = [f"{paper_id}_{i}" for i in range(paper.chunk_count)]
+    try:
         vector_store.delete(matching_ids)
-        # print(f"Len of vector store after deletion: {len(vector_store.docstore._dict)}")
         vector_store.save_local(VECTOR_STORE_DIR)
-    else:
-        raise HTTPException(status_code=404, detail="ベクトルデータベース内に該当論文が見つかりませんでした．",)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ベクトルデータベースからの削除中にエラーが発生しました．: {e}")
 
     return PaperDeleteResponseSchema(message="論文の削除が完了しました．")

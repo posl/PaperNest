@@ -19,6 +19,7 @@ class Paper(Base):
     summary = Column(String)
     hash = Column(String, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    chunk_count = Column(Integer, nullable=True)
     uploader = relationship("User", back_populates="papers", passive_deletes=True)
 
     __table_args__ = (

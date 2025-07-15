@@ -34,21 +34,15 @@ def delete_account(
                     os.remove(pdf_path)
                     # print(f"削除しました: {pdf_path}")
                     # ベクトルデータベースから削除
-                    matching_ids = [
-                        doc_id
-                        for doc_id, doc in vector_store.docstore._dict.items()
-                        if doc.metadata["paper_id"] == paper.paper_id
-                    ]
-                    if matching_ids:
-                        # for matching_id in matching_ids:
+                    if paper.chunk_count is None:
+                        continue
+                    matching_ids = [f"{paper.paper_id}_{i}" for i in range(paper.chunk_count)]
+                    try:
                         vector_store.delete(matching_ids)
-                        # print(
-                        #     f"Len of vector store after deletion: {len(vector_store.docstore._dict)}"
-                        # )
-                    else:
+                    except Exception as e:
                         raise HTTPException(
-                            status_code=404,
-                            detail="ベクトルデータベース内に該当論文が見つかりませんでした．",
+                            status_code=500,
+                            detail=f"ベクトルデータベースの削除中にエラーが発生しました（paper_id: {paper.paper_id}）: {e}"
                         )
                 except Exception as e:
                     print(f"削除失敗: {pdf_path}, 理由: {e}")

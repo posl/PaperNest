@@ -22,6 +22,7 @@ def register_paper(metadata: dict) -> str:
             summary=metadata.get("summary"),
             hash=metadata.get("hash"),
             user_id=metadata.get("user_id"),
+            chunk_count=metadata.get("chunk_count"),
         )
 
         db.add(paper)

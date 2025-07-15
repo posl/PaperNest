@@ -1,4 +1,5 @@
 import os
+import time
 
 from fastapi import APIRouter, Depends, HTTPException
 from langchain_community.vectorstores import FAISS
@@ -23,6 +24,7 @@ def delete_papers_by_theme(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    total_start = time.time()
     # 認証ユーザーに紐づいた指定テーマの論文だけを取得
     papers = (
         db.query(Paper).filter(Paper.category == research_theme, Paper.user_id == current_user.id).all()
@@ -42,26 +44,26 @@ def delete_papers_by_theme(
 
             # データベースから削除
             db.delete(paper)
+            db.commit()
 
             # ベクトルデータベースから削除
-            matching_ids = [
-                doc_id
-                for doc_id, doc in vector_store.docstore._dict.items()
-                if doc.metadata["paper_id"] == paper.paper_id
-            ]
-            if matching_ids:
-                # for matching_id in matching_ids:
-                vector_store.delete(matching_ids)
-                # print(
-                #     f"Len of vector store after deletion: {len(vector_store.docstore._dict)}"
-                # )
-            else:
+            if paper.chunk_count is None:
                 raise HTTPException(
-                    status_code=404,
-                    detail="ベクトルデータベース内に該当論文が見つかりませんでした．",
+                    status_code=500,
+                    detail=f"チャンク数（chunk_count）が記録されていません（paper_id: {paper.paper_id}）．"
                 )
 
-        db.commit()
+            matching_ids = [f"{paper.paper_id}_{i}" for i in range(paper.chunk_count)]
+            try:
+                vector_store.delete(matching_ids)
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"ベクトルデータベースの削除中にエラーが発生しました（paper_id: {paper.paper_id}）: {e}"
+                )
+
         vector_store.save_local(VECTOR_STORE_DIR)
 
+    total_end = time.time()
+    print(f"全体の処理にかかった時間: {total_end - total_start}秒")
     return ResearchThemeDeleteResponseSchema(message="研究テーマの削除が完了しました．")

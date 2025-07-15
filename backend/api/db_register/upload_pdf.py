@@ -89,7 +89,8 @@ def split_pdf_text(pdf_text: str) -> list:
     )
     # テキストを分割
     splited_text = text_splitter.split_text(pdf_text)
-    return splited_text
+    chunk_count = len(splited_text)
+    return splited_text, chunk_count
 
 
 # テキストを埋め込みベクトルに変換
@@ -103,7 +104,9 @@ def embedding_text(
         )
         for text in splited_text
     ]
-    index = FAISS.from_documents(documents, embedding=embeddings)
+
+    doc_ids = [f"{pdf_id}_{i}" for i in range(len(splited_text))]
+    index = FAISS.from_documents(documents, embedding=embeddings, ids=doc_ids)
     return index
 
 
@@ -163,7 +166,7 @@ def analyze_pdf_from_bytes(
         f.write(pdf_bytes)
 
     pdf_text = read_text_from_pdf(str(copy_pdf_path))
-    splited_txt = split_pdf_text(pdf_text)
+    splited_txt, chunk_count = split_pdf_text(pdf_text)
     index = embedding_text(splited_txt, pdf_id, user_id, category)
     retriever = get_retriever(index)
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
@@ -204,6 +207,7 @@ def analyze_pdf_from_bytes(
         "title": title,
         "summary": summary,
         "index": index,
+        "chunk_count": chunk_count,
     }
 
 
@@ -266,6 +270,7 @@ async def upload_pdf(
             "category": category,
             "hash": pdf_hash,
             "user_id": current_user.id,
+            "chunk_count": pdf_info["chunk_count"],
         }
     )
     suc_or_fai = "failure"
@@ -311,6 +316,7 @@ async def upload_pdf(
         if not openalex:
             if metadata.get("core_rank") in ["Unknown", "Not found", "Error"]:
                 missing_fields.append("COREランク")
+
 
         # 失敗項目がある場合は、それを列挙してメッセージを作成
         if missing_fields:
