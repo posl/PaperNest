@@ -9,8 +9,8 @@ CROSSREF_API_URL = "https://api.crossref.org/works"
 OPENALEX_API_URL = "https://api.openalex.org/works"
 
 # メタデータを取得する関数
-def fetch_metadata(title: str) -> dict:
-    metadata, openalex = fetch_metadata_from_title(title)
+async def fetch_metadata(title: str) -> dict:
+    metadata, openalex = await fetch_metadata_from_crossref(title)
     # print(f"Metadata fetched: {metadata}")
 
     if "error" in metadata:
@@ -23,7 +23,7 @@ def fetch_metadata(title: str) -> dict:
         doi = metadata.get("doi")
 
         if doi:
-            bibtex = fetch_bibtex_from_doi(doi)
+            bibtex = await fetch_bibtex_from_doi(doi)
             # print(f"BibTeX fetched: {bibtex}")
 
             # bibtexのフィールドから会議かジャーナルかを判定
@@ -70,14 +70,15 @@ def similarity(t1: str, t2: str) -> float:
     return SequenceMatcher(None, preprocess(t1), preprocess(t2)).ratio()
 
 # OpenAlex fallback
-def fetch_metadata_from_openalex(title: str, similarity_threshold: float) -> dict:
+async def fetch_metadata_from_openalex(title: str, similarity_threshold: float) -> dict:
     params = {
         "search": title,
         "per-page": 3
     }
 
     try:
-        response = httpx.get(OPENALEX_API_URL, params=params, timeout=30)
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.get(OPENALEX_API_URL, params=params)
         response.raise_for_status()
         data = response.json()
         results = data.get("results", [])
@@ -87,12 +88,6 @@ def fetch_metadata_from_openalex(title: str, similarity_threshold: float) -> dic
 
         best_item = None
         best_score = -1.0
-
-        def is_newer_openalex(item1, item2):
-            # "publication_date": "2023-05-15"
-            date1 = item1.get("publication_date", "")
-            date2 = item2.get("publication_date", "")
-            return date1 > date2  # ISO 8601形式なので文字列比較でOK
 
         for item in results:
             item_title = item.get("title", "")
@@ -121,8 +116,14 @@ def fetch_metadata_from_openalex(title: str, similarity_threshold: float) -> dic
 
     except httpx.RequestError as e:
         return {"error": f"OpenAlex request failed: {e}"}
+    
+def is_newer_openalex(item1, item2):
+    # "publication_date": "2023-05-15"
+    date1 = item1.get("publication_date", "")
+    date2 = item2.get("publication_date", "")
+    return date1 > date2
 
-def fetch_metadata_from_title(title: str, similarity_threshold=0.95) -> dict:
+async def fetch_metadata_from_crossref(title: str, similarity_threshold=0.95) -> dict:
     params = {
         "query.title": title,
         "rows": 3,
@@ -134,7 +135,8 @@ def fetch_metadata_from_title(title: str, similarity_threshold=0.95) -> dict:
     }
 
     try:
-        response = httpx.get(CROSSREF_API_URL, params=params, headers=headers, timeout=30)
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.get(CROSSREF_API_URL, params=params, headers=headers)
         response.raise_for_status()
 
         data = response.json()
@@ -142,22 +144,10 @@ def fetch_metadata_from_title(title: str, similarity_threshold=0.95) -> dict:
 
         if not items:
             # print("No items found in Crossref, using OpenAlex.")
-            return fetch_metadata_from_openalex(title, similarity_threshold), True
+            return await fetch_metadata_from_openalex(title, similarity_threshold), True
 
         best_item = None
         best_score = -1.0
-
-        # 論文発行日の比較関数
-        def is_newer_crossref(item1, item2):
-            """Return True if item1 is more recent than item2 (compare year, month, day)."""
-            date1 = item1.get("issued", {}).get("date-parts", [[0]])[0]
-            date2 = item2.get("issued", {}).get("date-parts", [[0]])[0]
-
-            # 年・月・日の3要素に揃える（足りない部分は0で埋める）
-            date1_full = tuple(date1 + [0] * (3 - len(date1)))
-            date2_full = tuple(date2 + [0] * (3 - len(date2)))
-
-            return date1_full > date2_full
 
         for item in items:
             item_title = item.get("title", [None])[0]
@@ -175,7 +165,7 @@ def fetch_metadata_from_title(title: str, similarity_threshold=0.95) -> dict:
 
         if best_score < similarity_threshold:
             # print(f"Low similarity ({best_score}) in Crossref. Trying OpenAlex...")
-            return fetch_metadata_from_openalex(title, similarity_threshold), True
+            return await fetch_metadata_from_openalex(title, similarity_threshold), True
 
         if best_item:
             return {
@@ -191,9 +181,21 @@ def fetch_metadata_from_title(title: str, similarity_threshold=0.95) -> dict:
 
     except httpx.RequestError as e:
         return {"error": f"Request failed: {e}"}, False
+    
+# 論文発行日の比較関数
+def is_newer_crossref(item1, item2):
+    """Return True if item1 is more recent than item2 (compare year, month, day)."""
+    date1 = item1.get("issued", {}).get("date-parts", [[0]])[0]
+    date2 = item2.get("issued", {}).get("date-parts", [[0]])[0]
+
+    # 年・月・日の3要素に揃える（足りない部分は0で埋める）
+    date1_full = tuple(date1 + [0] * (3 - len(date1)))
+    date2_full = tuple(date2 + [0] * (3 - len(date2)))
+
+    return date1_full > date2_full
 
 # DOIからBibTeXを取得
-def fetch_bibtex_from_doi(doi: str) -> str:
+async def fetch_bibtex_from_doi(doi: str) -> str:
     headers = {
         "User-Agent": "MyResearchBot/1.0"
     }
@@ -201,7 +203,8 @@ def fetch_bibtex_from_doi(doi: str) -> str:
     url = f"https://api.crossref.org/works/{doi}/transform/application/x-bibtex"
 
     try:
-        response = httpx.get(url, headers=headers, timeout=10)
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(url, headers=headers)
         response.raise_for_status()
         return response.text
     except Exception as e:

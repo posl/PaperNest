@@ -1,6 +1,8 @@
+# import os
 import hashlib
 import uuid
-from typing import Dict
+import asyncio
+from typing import Dict, Tuple
 
 import fitz
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -38,6 +40,8 @@ from backend.utils.tranalate import translate
 
 router = APIRouter()  # インスタンス作成
 
+# os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 # GroqのAPI keyを取得
 groq_chat = ChatGroq(groq_api_key=GROQ_API_KEY, model_name=CHAT_MODEL)
 
@@ -50,7 +54,6 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
-
 
 # ベクトルデータベースをロード
 # def load_vector_store() -> FAISS:
@@ -69,6 +72,12 @@ embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
 
 #     return vector_store
 
+# PDFファイルを保存する関数
+def save_pdf(pdf_bytes, copy_pdf_path):
+    if not UPLOAD_DIR.exists():
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    with open(copy_pdf_path, "wb") as f:
+        f.write(pdf_bytes)
 
 # PDFファイルからテキストを抽出
 def read_text_from_pdf(pdf_path):
@@ -81,7 +90,7 @@ def read_text_from_pdf(pdf_path):
 
 
 # PDFのテキストを分割
-def split_pdf_text(pdf_text: str) -> list:
+def split_pdf_text(pdf_text: str) -> Tuple[list, int]:
     # チャンク間でoverlappingさせながらテキストを分割
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=3000,
@@ -126,9 +135,12 @@ def create_rag_chain(
 
 
 # 論文の要約を生成
-def generate_summary(rag_chain: RunnableBinding) -> str:
-    user_input = "Read all pages of the PDF and summarize the paper. The output format is as follows.\nSummary: {summary}"
-    response = rag_chain.invoke({"input": user_input})
+async def generate_summary(rag_chain: RunnableBinding) -> str:
+    user_input = (
+        "Read all pages of the PDF and summarize the paper. "
+        "The output format is as follows.\nSummary: {summary}"
+    )
+    response = await rag_chain.ainvoke({"input": user_input})
     return response["answer"]
 
 
@@ -151,65 +163,44 @@ def calculate_first_page_hash(pdf_bytes: bytes) -> str:
     hash_value = hashlib.sha256(text.encode("utf-8")).hexdigest()
     return hash_value
 
+async def prepare_metadata(title: str) -> Tuple[Dict[str, str], bool]:
+    openalex = False
 
-def analyze_pdf_from_bytes(
-    pdf_bytes: bytes, user_id: int, category: str
-) -> Dict[str, str]:
-    # PDFを保存
-    pdf_id = str(uuid.uuid4())
-    pdf_url = f"{BASE_URL}/uploaded/{pdf_id}.pdf"
+    if title is not None:
+        metadata, openalex = await fetch_metadata(title)
+        # メタデータが取得できていなかった場合，タイトルを追加
+        if "error" in metadata:
+            metadata["title"] = title
+    else:
+        metadata = {
+            "title": None,
+            "authors": None,
+            "year": None,
+            "conference": None,
+            "bibtex": None,
+            "citations": None,
+            "core_rank": None,
+        }
+    return metadata, openalex
 
-    copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
-    if not UPLOAD_DIR.exists():
-        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    with open(copy_pdf_path, "wb") as f:
-        f.write(pdf_bytes)
-
+async def prepare_summary(copy_pdf_path: str, pdf_id: str, user_id: int, category: str) -> Tuple[str, int]:
     pdf_text = read_text_from_pdf(str(copy_pdf_path))
     splited_txt, chunk_count = split_pdf_text(pdf_text)
     index = embedding_text(splited_txt, pdf_id, user_id, category)
+    # print(index.similarity_search("test", k=1))
+
     retriever = get_retriever(index)
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
+    summary = await generate_summary(rag_chain)
+    summary = summary.replace("Summary: ", "")
+    summary = await translate(summary, "ja")
 
-    # タイトルを生成
-    title = get_paper_title(copy_pdf_path)
-    # if any(
-    #     phrase in title.lower() for phrase in ["unable to extract", "unable to find"]
-    # ):
-    #     title = None
-    # else:
-    #     if (
-    #         "Based on the PDF content" in title
-    #         or "Based on the provided PDF content" in title
-    #     ):
-    #         if "However, I can suggest a possible title:" in title:
-    #             title = title.split("However, I can suggest a possible title:")[
-    #                 -1
-    #             ].strip()
-    #         else:
-    #             title = None  # 適切な提案がなかった場合は None にする
-    # 要約を生成
-    summary = generate_summary(rag_chain).replace("Summary: ", "")
+    vector_store = get_vector_store()
 
-    # # ベクトルデータベースに論文内容を追加
-    # vector_store = load_vector_store()
-    # vector_store.merge_from(index)
+    await asyncio.to_thread(vector_store.merge_from, index)
+    await asyncio.to_thread(vector_store.save_local, VECTOR_STORE_DIR)
 
-    # # ベクトルデータベースを保存
-    # vector_store.save_local(VECTOR_STORE_DIR)
-
-    # 要約を日本語に翻訳
-    summary = translate(summary, "ja")
-
-    return {
-        "pdf_id": pdf_id,
-        "pdf_url": pdf_url,
-        "title": title,
-        "summary": summary,
-        "index": index,
-        "chunk_count": chunk_count,
-    }
-
+    return summary, chunk_count
 
 # PDFをアップロード
 # FastAPIのエンドポイント
@@ -239,38 +230,34 @@ async def upload_pdf(
     if existing:
         raise HTTPException(status_code=409, detail="このPDFはすでに登録されています．")
 
-    # PDFのタイトルと要約を取得
-    pdf_info = analyze_pdf_from_bytes(pdf_bytes, current_user.id, category)
-    # print(pdf_info)
-    title = pdf_info["title"]
-    # print(f"PDF Title: {title}")
+    # PDFを保存
+    pdf_id = str(uuid.uuid4())
+    pdf_url = f"{BASE_URL}/uploaded/{pdf_id}.pdf"
 
-    openalex = False
+    copy_pdf_path = UPLOAD_DIR / f"{pdf_id}.pdf"
 
-    if title is not None:
-        metadata, openalex = fetch_metadata(title)
-        # メタデータが取得できていなかった場合，タイトルを追加
-        if "error" in metadata:
-            metadata["title"] = title
-    else:
-        metadata = {
-            "title": None,
-            "authors": None,
-            "year": None,
-            "conference": None,
-            "bibtex": None,
-            "citations": None,
-            "core_rank": None,
-        }
+    save_pdf(pdf_bytes, copy_pdf_path)
+
+    title = await get_paper_title(copy_pdf_path)
+
+    summary_task = asyncio.create_task(prepare_summary(copy_pdf_path, pdf_id, current_user.id, category))
+    metadata_task = asyncio.create_task(prepare_metadata(title))
+
+    # 並列に実行
+    (summary, chunk_count), (metadata, openalex) = await asyncio.gather(
+        summary_task,
+        metadata_task
+    )
+
     metadata.update(
         {
-            "pdf_id": pdf_info["pdf_id"],
-            "pdf_url": pdf_info["pdf_url"],
-            "summary": pdf_info["summary"],
+            "pdf_id": pdf_id,
+            "pdf_url": pdf_url,
+            "summary": summary,
             "category": category,
             "hash": pdf_hash,
             "user_id": current_user.id,
-            "chunk_count": pdf_info["chunk_count"],
+            "chunk_count": chunk_count,
         }
     )
     suc_or_fai = "failure"
@@ -332,14 +319,6 @@ async def upload_pdf(
                 message="PDFの登録が完了しました．",
                 data=final_data,
             )
-
-        # ベクトルデータベースに論文内容を追加
-        index = pdf_info["index"]
-        vector_store = get_vector_store()
-        vector_store.merge_from(index)
-
-        # ベクトルデータベースを保存
-        vector_store.save_local(VECTOR_STORE_DIR)
 
     # print(response)
     return response
