@@ -1,6 +1,7 @@
 import httpx
 import pandas as pd
 import re
+import asyncio
 from difflib import SequenceMatcher
 import os
 
@@ -8,13 +9,53 @@ import os
 CROSSREF_API_URL = "https://api.crossref.org/works"
 OPENALEX_API_URL = "https://api.openalex.org/works"
 
+# しきい値
+SIMILARITY_THRESHOLD = 0.95
+
 # メタデータを取得する関数
 async def fetch_metadata(title: str) -> dict:
-    metadata, openalex = await fetch_metadata_from_crossref(title)
-    # print(f"Metadata fetched: {metadata}")
+    print("🟩🟩")
+    crossref_task = asyncio.create_task(fetch_metadata_from_crossref(title, SIMILARITY_THRESHOLD))
+    openalex_task = asyncio.create_task(fetch_metadata_from_openalex(title, SIMILARITY_THRESHOLD))
+    print("🟩🟩")
 
-    if "error" in metadata:
-        return metadata, openalex
+    done, pending = await asyncio.wait(
+        [crossref_task, openalex_task],
+        return_when=asyncio.FIRST_COMPLETED
+    )
+
+    # Crossref が先に完了した場合
+    if crossref_task in done:
+        crossref_metadata = crossref_task.result()
+        if "error" not in crossref_metadata:
+            openalex_task.cancel()  # 不要なのでキャンセル
+            metadata = crossref_metadata
+            openalex = False
+        else:
+            # OpenAlex の完了を待つ
+            openalex_metadata = await openalex_task
+            if "error" not in openalex_metadata:
+                metadata = openalex_metadata
+                openalex = True
+            else:
+                metadata = {"error": "No data found in both Crossref and OpenAlex."}
+                openalex = False
+
+    # OpenAlex が先に完了した場合
+    elif openalex_task in done:
+        openalex_metadata = openalex_task.result()
+        crossref_metadata = await crossref_task
+        if "error" not in crossref_metadata:
+            metadata = crossref_metadata
+            openalex = False
+        elif "error" not in openalex_metadata:
+            metadata = openalex_metadata
+            openalex = True
+        else:
+            metadata = {"error": "No data found in both Crossref and OpenAlex."}
+            openalex = False
+
+    # print(f"Metadata fetched: {metadata}")
 
     bibtex = None
     core_rank = "Unknown"
@@ -78,7 +119,9 @@ async def fetch_metadata_from_openalex(title: str, similarity_threshold: float) 
 
     try:
         async with httpx.AsyncClient(timeout=30) as client:
+            print("🟨🟨🟨")
             response = await client.get(OPENALEX_API_URL, params=params)
+            print("🟨🟨🟨🟨")
         response.raise_for_status()
         data = response.json()
         results = data.get("results", [])
@@ -123,7 +166,7 @@ def is_newer_openalex(item1, item2):
     date2 = item2.get("publication_date", "")
     return date1 > date2
 
-async def fetch_metadata_from_crossref(title: str, similarity_threshold=0.95) -> dict:
+async def fetch_metadata_from_crossref(title: str, similarity_threshold: float) -> dict:
     params = {
         "query.title": title,
         "rows": 3,
@@ -136,15 +179,16 @@ async def fetch_metadata_from_crossref(title: str, similarity_threshold=0.95) ->
 
     try:
         async with httpx.AsyncClient(timeout=30) as client:
+            print("🟩🟩🟩")
             response = await client.get(CROSSREF_API_URL, params=params, headers=headers)
+            print("🟩🟩🟩🟩")
         response.raise_for_status()
 
         data = response.json()
         items = data.get("message", {}).get("items", [])
 
         if not items:
-            # print("No items found in Crossref, using OpenAlex.")
-            return await fetch_metadata_from_openalex(title, similarity_threshold), True
+            return {"error": "No data found in Crossref."}
 
         best_item = None
         best_score = -1.0
@@ -163,11 +207,7 @@ async def fetch_metadata_from_crossref(title: str, similarity_threshold=0.95) ->
                 best_item = item
                 best_score = score
 
-        if best_score < similarity_threshold:
-            # print(f"Low similarity ({best_score}) in Crossref. Trying OpenAlex...")
-            return await fetch_metadata_from_openalex(title, similarity_threshold), True
-
-        if best_item:
+        if best_item and best_score >= similarity_threshold:
             return {
                 "title": best_item.get("title", [None])[0],
                 "authors": [f"{a.get('given', '')} {a.get('family', '')}".strip() for a in best_item.get("author", [])],
@@ -175,12 +215,12 @@ async def fetch_metadata_from_crossref(title: str, similarity_threshold=0.95) ->
                 "conference": best_item.get("container-title", [None])[0],
                 "citations": best_item.get("is-referenced-by-count"),
                 "doi": best_item.get("DOI")
-            }, False
+            }
         else:
-            return {"error": "No matching paper with a valid title."}, False
+            return {"error": "No matching paper in Crossref."}
 
     except httpx.RequestError as e:
-        return {"error": f"Request failed: {e}"}, False
+        return {"error": f"Request failed: {e}"}
     
 # 論文発行日の比較関数
 def is_newer_crossref(item1, item2):

@@ -1,18 +1,16 @@
-from groq import AsyncGroq
+from groq import Groq
+
 from backend.config.config import CHAT_MODEL, GROQ_API_KEY
 
 LANGUAGES = {"ja": "Japanese", "en": "English"}
 
-# クエリの翻訳（非同期）
-async def translate(question: str, language: str) -> str:
-    client = AsyncGroq(api_key=GROQ_API_KEY)
+
+# クエリの翻訳
+def translate(question: str, language: str) -> str:
+    client = Groq(api_key=GROQ_API_KEY)
     system_prompt = "You are an excellent translator."
-    user_prompt = (
-        f"Please translate the following text into {LANGUAGES[language]}. "
-        f"However, please include only the translation in the output. "
-        f"Also, if the following text is already written in {LANGUAGES[language]}, please output it as is.\n\n{question}"
-    )
-    chat_completion = await client.chat.completions.create(
+    user_prompt = f"Please translate the following text into {LANGUAGES[language]}. However, please include only the translation in the output. Also, if the following text is already written in {LANGUAGES[language]}, pleaseoutput it as is.\n\n{question}"
+    chat_completion = client.chat.completions.create(
         model=CHAT_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},

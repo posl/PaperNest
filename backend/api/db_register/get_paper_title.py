@@ -2,32 +2,30 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from groq import AsyncGroq  # 非同期クライアント
+from groq import Groq
 from pypdf import PdfReader
 
 load_dotenv()
 groq_api_key = os.environ["GROQ_API_KEY"]
 
-async def get_paper_title(pdf_path: Path) -> str:
-    # 同期処理：PDFの1ページ目を読み込む
+
+def get_paper_title(pdf_path: Path) -> str:
     reader = PdfReader(pdf_path)
+    # PDFの1ページ目のテキストを取得
     text = reader.pages[0].extract_text()
 
-    # 非同期Groqクライアント
-    client = AsyncGroq(api_key=groq_api_key)
-
+    client = Groq(api_key=groq_api_key)
     system_prompt = "You are a PDF document analyzer specialized in academic papers."
     user_prompt = f"The text on the first page of the thesis PDF is provided below. Please extract the thesis title. However, in your answer, please only provide the extracted title.\n\n{text}"
-
-    # 非同期API呼び出し
-    chat_completion = await client.chat.completions.create(
+    chat_completion = client.chat.completions.create(
         model="llama3-70b-8192",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
     )
-    return chat_completion.choices[0].message.content
+    question = chat_completion.choices[0].message.content
+    return question
 
 
 # from pdfminer.converter import PDFPageAggregator

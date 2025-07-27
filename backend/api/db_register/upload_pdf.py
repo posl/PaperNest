@@ -1,4 +1,5 @@
 # import os
+import time
 import hashlib
 import uuid
 import asyncio
@@ -135,12 +136,9 @@ def create_rag_chain(
 
 
 # 論文の要約を生成
-async def generate_summary(rag_chain: RunnableBinding) -> str:
-    user_input = (
-        "Read all pages of the PDF and summarize the paper. "
-        "The output format is as follows.\nSummary: {summary}"
-    )
-    response = await rag_chain.ainvoke({"input": user_input})
+def generate_summary(rag_chain: RunnableBinding) -> str:
+    user_input = "Read all pages of the PDF and summarize the paper. The output format is as follows.\nSummary: {summary}"
+    response = rag_chain.invoke({"input": user_input})
     return response["answer"]
 
 
@@ -164,6 +162,8 @@ def calculate_first_page_hash(pdf_bytes: bytes) -> str:
     return hash_value
 
 async def prepare_metadata(title: str) -> Tuple[Dict[str, str], bool]:
+    metadata_start = time.perf_counter()
+    print("🟩")
     openalex = False
 
     if title is not None:
@@ -181,24 +181,59 @@ async def prepare_metadata(title: str) -> Tuple[Dict[str, str], bool]:
             "citations": None,
             "core_rank": None,
         }
+    metadata_end = time.perf_counter()
+    print(f"メタデータ取得時間: {metadata_end - metadata_start:.2f}秒")
     return metadata, openalex
 
 async def prepare_summary(copy_pdf_path: str, pdf_id: str, user_id: int, category: str) -> Tuple[str, int]:
+    summary_start = time.perf_counter()
+    await asyncio.sleep(0.1)  # 少し待つ
+
+    print("🟥")
     pdf_text = read_text_from_pdf(str(copy_pdf_path))
+    one_end = time.perf_counter()
+    print(f"PDF読み込み時間: {one_end - summary_start:.2f}秒")
     splited_txt, chunk_count = split_pdf_text(pdf_text)
+    two_end = time.perf_counter()
+    print(f"テキスト分割時間: {two_end - one_end:.2f}秒")
     index = embedding_text(splited_txt, pdf_id, user_id, category)
+    three_end = time.perf_counter()
+    print(f"埋め込み時間: {three_end - two_end:.2f}秒")
     # print(index.similarity_search("test", k=1))
 
     retriever = get_retriever(index)
+    four_end = time.perf_counter()
+    print(f"Retriever取得時間: {four_end - three_end:.2f}秒")
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
-    summary = await generate_summary(rag_chain)
+    five_end = time.perf_counter()
+    print(f"RAGチェーン作成時間: {five_end - four_end:.2f}秒")
+    print("🟥🟥")
+    summary = await asyncio.to_thread(generate_summary, rag_chain)
+    print("🟥🟥🟥")
+    six_end = time.perf_counter()
+    print(f"要約生成時間: {six_end - five_end:.2f}秒")
     summary = summary.replace("Summary: ", "")
-    summary = await translate(summary, "ja")
+    seven_end = time.perf_counter()
+    print(f"要約整形時間: {seven_end - six_end:.2f}秒")
+    summary = await asyncio.to_thread(translate, summary, "ja")
+    print("🟥🟥🟥🟥")
+    eight_end = time.perf_counter()
+    print(f"要約翻訳時間: {eight_end - seven_end:.2f}秒")
 
     vector_store = get_vector_store()
+    print("🟥🟥🟥🟥🟥")
+    nine_end = time.perf_counter()
+    print(f"ベクトルストア取得時間: {nine_end - eight_end:.2f}秒")
+    # ベクトルストアに追加
 
-    await asyncio.to_thread(vector_store.merge_from, index)
-    await asyncio.to_thread(vector_store.save_local, VECTOR_STORE_DIR)
+    vector_store.merge_from(index)
+    ten_end = time.perf_counter()
+    print(f"ベクトルストアマージ時間: {ten_end - nine_end:.2f}秒")
+    # ベクトルストアを保存
+    vector_store.save_local(VECTOR_STORE_DIR)
+    summary_end = time.perf_counter()
+    print(f"ベクトルストア保存時間: {summary_end - ten_end:.2f}秒")
+    print(f"要約生成時間: {summary_end - summary_start:.2f}秒")
 
     return summary, chunk_count
 
@@ -211,6 +246,7 @@ async def upload_pdf(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    start = time.monotonic()
     # PDFのバリデーション
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
@@ -238,10 +274,10 @@ async def upload_pdf(
 
     save_pdf(pdf_bytes, copy_pdf_path)
 
-    title = await get_paper_title(copy_pdf_path)
+    title = get_paper_title(copy_pdf_path)
 
-    summary_task = asyncio.create_task(prepare_summary(copy_pdf_path, pdf_id, current_user.id, category))
     metadata_task = asyncio.create_task(prepare_metadata(title))
+    summary_task = asyncio.create_task(prepare_summary(copy_pdf_path, pdf_id, current_user.id, category))
 
     # 並列に実行
     (summary, chunk_count), (metadata, openalex) = await asyncio.gather(
@@ -321,6 +357,8 @@ async def upload_pdf(
             )
 
     # print(response)
+    end = time.monotonic()
+    print(f"PDFアップロード処理時間: {end - start:.2f}秒")
     return response
 
 
