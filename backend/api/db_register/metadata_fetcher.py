@@ -14,10 +14,8 @@ SIMILARITY_THRESHOLD = 0.95
 
 # メタデータを取得する関数
 async def fetch_metadata(title: str) -> dict:
-    print("🟩🟩")
     crossref_task = asyncio.create_task(fetch_metadata_from_crossref(title, SIMILARITY_THRESHOLD))
     openalex_task = asyncio.create_task(fetch_metadata_from_openalex(title, SIMILARITY_THRESHOLD))
-    print("🟩🟩")
 
     done, pending = await asyncio.wait(
         [crossref_task, openalex_task],
@@ -119,9 +117,7 @@ async def fetch_metadata_from_openalex(title: str, similarity_threshold: float) 
 
     try:
         async with httpx.AsyncClient(timeout=30) as client:
-            print("🟨🟨🟨")
             response = await client.get(OPENALEX_API_URL, params=params)
-            print("🟨🟨🟨🟨")
         response.raise_for_status()
         data = response.json()
         results = data.get("results", [])
@@ -179,9 +175,7 @@ async def fetch_metadata_from_crossref(title: str, similarity_threshold: float) 
 
     try:
         async with httpx.AsyncClient(timeout=30) as client:
-            print("🟩🟩🟩")
             response = await client.get(CROSSREF_API_URL, params=params, headers=headers)
-            print("🟩🟩🟩🟩")
         response.raise_for_status()
 
         data = response.json()
