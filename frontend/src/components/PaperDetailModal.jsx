@@ -28,7 +28,7 @@ export const PaperDetailModal = ({
   const handleConfirmDeleteFromEdit = async () => {
     try {
       const token = localStorage.getItem("token");
-      await fetch(`http://localhost:8000/papers/delete/${selectedRow.paper_id}`, {
+      await fetch(`http://192.168.35.242:8000/papers/delete/${selectedRow.paper_id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

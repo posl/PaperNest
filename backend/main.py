@@ -65,7 +65,11 @@ app = FastAPI(lifespan=startup_event)
 # 👇 CORSを設定：Reactからのアクセスを許可する
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # ← ReactのURL
+    allow_origins=[
+        "http://localhost:3000",          # 開発用
+        "http://192.168.35.242",          # 本番用 (ポート80で公開してるのでポート番号なしでOK)
+        "http://192.168.35.242:80",       # 念のため明示的にも追加
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

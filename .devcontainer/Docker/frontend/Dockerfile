@@ -1,14 +1,19 @@
-ARG NODE_VER
-FROM node:${NODE_VER}
-
+# ===== Build Stage =====
+FROM node:20 AS build
 WORKDIR /workspace/frontend
 
-RUN mkdir -p node_modules && chown -R node:node /workspace/frontend
+COPY Docker/frontend/package*.json ./
+RUN npm ci
 
-USER node
+COPY Docker/frontend ./
+RUN npm run build
 
-# ポートを3000に変更
-ENV PORT=3000
-ENV HOST=0.0.0.0
+# ===== Production Stage =====
+FROM nginx:alpine
+COPY --from=build /workspace/frontend/dist /usr/share/nginx/html
 
-CMD ["sh", "-c", "cd /workspace/frontend && npm install && npm run dev -- --host 0.0.0.0 --port 3000"]
+# Nginxデフォルト設定を上書き（必要なら）
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

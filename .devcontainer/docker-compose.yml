@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   backend:
     container_name: paper-nest-backend
@@ -6,25 +8,17 @@ services:
       dockerfile: Docker/backend/Dockerfile
     working_dir: /workspace/backend
     ports:
-      - 8000:8000
-    volumes:
-      - ..:/workspace
+      - "8000:8000"
     env_file:
-      - Docker/backend/.env  # パスを修正
+      - Docker/backend/.env
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 4
+    restart: always
 
   frontend:
     container_name: paper-nest-frontend
     build:
-      args:
-        - NODE_VER=20.10.0
       context: .
       dockerfile: Docker/frontend/Dockerfile
-    working_dir: /workspace/frontend
-    volumes:
-      - ..:/workspace
-      - /workspace/frontend/node_modules
     ports:
-      - 3000:3000
-    environment:
-      - PORT=3000
-      - HOST=0.0.0.0
+      - "80:80"
+    restart: always
