@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from groq import Groq
 from pypdf import PdfReader
+from backend.config.config import CHAT_MODEL
 
 load_dotenv()
 groq_api_key = os.environ["GROQ_API_KEY"]
@@ -18,7 +19,7 @@ def get_paper_title(pdf_path: Path) -> str:
     system_prompt = "You are a PDF document analyzer specialized in academic papers."
     user_prompt = f"The text on the first page of the thesis PDF is provided below. Please extract the thesis title. However, in your answer, please only provide the extracted title.\n\n{text}"
     chat_completion = client.chat.completions.create(
-        model="llama3-70b-8192",
+        model=CHAT_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},

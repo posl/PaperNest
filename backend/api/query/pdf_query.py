@@ -18,7 +18,7 @@ from backend.schema.schema import (
     PaperQuestionResponseSchema,
 )
 from backend.utils.security import get_current_user
-from backend.utils.tranalate import translate
+from backend.utils.translate import translate
 from backend.utils.vector_store import get_vector_store
 
 router = APIRouter()  # インスタンス作成

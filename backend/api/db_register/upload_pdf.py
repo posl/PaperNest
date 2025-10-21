@@ -36,7 +36,6 @@ from backend.models.models import Paper, User
 from backend.schema.schema import PaperSchema, UploadPDFResponseSchema
 from backend.utils.security import get_current_user
 from backend.utils.vector_store import get_vector_store
-from backend.utils.tranalate import translate
 
 router = APIRouter()  # インスタンス作成
 
@@ -136,7 +135,7 @@ def create_rag_chain(
 
 # 論文の要約を生成
 def generate_summary(rag_chain: RunnableBinding) -> str:
-    user_input = "Read all pages of the PDF and summarize the paper. The output format is as follows.\nSummary: {summary}"
+    user_input = "Read all pages of the PDF and summarize the paper in Japanese. The output should include only the summary and no other text."
     response = rag_chain.invoke({"input": user_input})
     return response["answer"]
 
@@ -191,8 +190,6 @@ async def prepare_summary(copy_pdf_path: str, pdf_id: str, user_id: int, categor
     retriever = get_retriever(index)
     rag_chain = create_rag_chain(retriever, groq_chat, prompt)
     summary = await asyncio.to_thread(generate_summary, rag_chain)
-    summary = summary.replace("Summary: ", "")
-    summary = await asyncio.to_thread(translate, summary, "ja")
 
     vector_store = get_vector_store()
 
