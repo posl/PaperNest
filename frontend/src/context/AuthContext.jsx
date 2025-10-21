@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const res = await secureFetch("http://192.168.35.242:8000/get_user_info", {
+        const res = await secureFetch(`${import.meta.env.VITE_API_BASE_URL}/get_user_info`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

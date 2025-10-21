@@ -30,7 +30,7 @@ export const secureFetch = async (url, options = {}) => {
   if (response.status === 401) {
     const refreshToken = localStorage.getItem("refresh_token");
     if (refreshToken) {
-      const refreshRes = await fetch("http://192.168.35.242:8000/refresh", {
+      const refreshRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh_token: refreshToken }),

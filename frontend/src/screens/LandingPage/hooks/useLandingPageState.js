@@ -66,7 +66,7 @@ export const useLandingPageState = (
     }, 100);
   
     try {
-      const res = await fetch("http://192.168.35.242:8000/upload", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/upload`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

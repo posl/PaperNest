@@ -37,7 +37,7 @@ export default function SignUpPage() {
     }
   
     try {
-      const res = await fetch("http://192.168.35.242:8000/register/user", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/register/user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -65,7 +65,7 @@ export default function SignUpPage() {
       setErrorMessage("");
       setSuccessMessage("✅ アカウント登録が完了しました！ホームに移動します。");
       try {
-        const loginRes = await fetch("http://192.168.35.242:8000/login", {
+        const loginRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",

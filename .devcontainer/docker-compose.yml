@@ -21,4 +21,6 @@ services:
       dockerfile: Docker/frontend/Dockerfile
     ports:
       - "80:80"
+    env_file:
+      - Docker/frontend/.env
     restart: always

@@ -34,7 +34,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const res = await secureFetch("http://192.168.35.242:8000/get_user_info");
+        const res = await secureFetch(`${import.meta.env.VITE_API_BASE_URL}/get_user_info`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         setUsername(data.username || "");
@@ -61,7 +61,7 @@ export default function SettingsPage() {
       }
 
     try {
-      const res = await fetch("http://192.168.35.242:8000/change/password", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/change/password`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -108,7 +108,7 @@ export default function SettingsPage() {
 
   const handleDeleteAccount = async () => {
     try {
-      const res = await fetch("http://192.168.35.242:8000/delete/account", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/delete/account`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

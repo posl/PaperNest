@@ -46,7 +46,7 @@ export const LandingPage = () => {
     console.log("LandingPage: fetchPapers called");
     try {
       const token = localStorage.getItem("token");
-      const response = await secureFetch("http://192.168.35.242:8000/get_all_papers");
+      const response = await secureFetch(`${import.meta.env.VITE_API_BASE_URL}/get_all_papers`);
       if (!response) return;
 
       // if (!response.ok) {
@@ -199,7 +199,7 @@ const handleQuestionSubmit = async (question) => {
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch("http://192.168.35.242:8000/search", {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/search`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -254,7 +254,7 @@ const handleQuestionSubmit = async (question) => {
   const handleConfirmDeletePaper = async () => {
     try {
       const token = localStorage.getItem("token");
-      await fetch(`http://192.168.35.242:8000/papers/delete/${paperIdToDelete}`, {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/papers/delete/${paperIdToDelete}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

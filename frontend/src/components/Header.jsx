@@ -36,7 +36,7 @@ export const Header = ({ isMenuOpen, setIsMenuOpen, tabs, setTabs, selectedTabId
       const token = localStorage.getItem("token");
       const tabToDelete = tabs.find(t => t.id === tabIdToDelete);
       if (tabToDelete) {
-        await fetch(`http://192.168.35.242:8000/delete/${encodeURIComponent(tabToDelete.name)}`, {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL}/delete/${encodeURIComponent(tabToDelete.name)}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });

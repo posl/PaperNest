@@ -28,7 +28,7 @@ export default function SignInPage() {
     formData.append("password", password.trim());
 
     try {
-      const response = await fetch("http://192.168.35.242:8000/login", {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
