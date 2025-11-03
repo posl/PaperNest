@@ -2,7 +2,7 @@ import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from backend.database.database import get_db
 from backend.utils.security import verify_password, get_current_user
 from backend.schema.schema import AccountDeleteRequest, AccountDeleteResponse

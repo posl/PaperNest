@@ -1,7 +1,7 @@
 # import os
+import asyncio
 import hashlib
 import uuid
-import asyncio
 from typing import Dict, Tuple
 
 import fitz
@@ -16,7 +16,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableBinding
 from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_groq import ChatGroq
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
@@ -71,12 +71,14 @@ embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
 
 #     return vector_store
 
+
 # PDFファイルを保存する関数
 def save_pdf(pdf_bytes, copy_pdf_path):
     if not UPLOAD_DIR.exists():
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     with open(copy_pdf_path, "wb") as f:
         f.write(pdf_bytes)
+
 
 # PDFファイルからテキストを抽出
 def read_text_from_pdf(pdf_path):
@@ -159,6 +161,7 @@ def calculate_first_page_hash(pdf_bytes: bytes) -> str:
     hash_value = hashlib.sha256(text.encode("utf-8")).hexdigest()
     return hash_value
 
+
 async def prepare_metadata(title: str) -> Tuple[Dict[str, str], bool]:
     openalex = False
 
@@ -179,7 +182,10 @@ async def prepare_metadata(title: str) -> Tuple[Dict[str, str], bool]:
         }
     return metadata, openalex
 
-async def prepare_summary(copy_pdf_path: str, pdf_id: str, user_id: int, category: str) -> Tuple[str, int]:
+
+async def prepare_summary(
+    copy_pdf_path: str, pdf_id: str, user_id: int, category: str
+) -> Tuple[str, int]:
     await asyncio.sleep(0.1)  # 少し待つ
 
     pdf_text = read_text_from_pdf(str(copy_pdf_path))
@@ -199,6 +205,7 @@ async def prepare_summary(copy_pdf_path: str, pdf_id: str, user_id: int, categor
     vector_store.save_local(VECTOR_STORE_DIR)
 
     return summary, chunk_count
+
 
 # PDFをアップロード
 # FastAPIのエンドポイント
@@ -239,12 +246,13 @@ async def upload_pdf(
     title = get_paper_title(copy_pdf_path)
 
     metadata_task = asyncio.create_task(prepare_metadata(title))
-    summary_task = asyncio.create_task(prepare_summary(copy_pdf_path, pdf_id, current_user.id, category))
+    summary_task = asyncio.create_task(
+        prepare_summary(copy_pdf_path, pdf_id, current_user.id, category)
+    )
 
     # 並列に実行
     (summary, chunk_count), (metadata, openalex) = await asyncio.gather(
-        summary_task,
-        metadata_task
+        summary_task, metadata_task
     )
 
     metadata.update(
@@ -301,7 +309,6 @@ async def upload_pdf(
         if not openalex:
             if metadata.get("core_rank") in ["Unknown", "Not found", "Error"]:
                 missing_fields.append("COREランク")
-
 
         # 失敗項目がある場合は、それを列挙してメッセージを作成
         if missing_fields:

@@ -1,6 +1,6 @@
 from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # 新規ユーザ登録リクエストスキーマ
@@ -16,8 +16,9 @@ class UserOut(BaseModel):
     username: str
     elementary_school: str
 
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ユーザ認証リフレッシュトークン付きトークンスキーマ
