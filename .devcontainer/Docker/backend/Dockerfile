@@ -3,7 +3,7 @@ FROM python:3.10-slim
 WORKDIR /workspace/backend
 
 RUN apt-get update && \
-    apt-get install -y git curl build-essential libgl1-mesa-glx && \
+    apt-get install -y git curl build-essential libgl1 && \
     rm -rf /var/lib/apt/lists/*
 
 ENV PYTHONUNBUFFERED=1
