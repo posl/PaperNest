@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 from backend.api.auth.change_password import router as change_password_router
 from backend.api.auth.change_user_name import router as change_user_name_router
@@ -67,8 +67,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",          # 開発用
-        "http://192.168.35.242",          # 本番用 (ポート80で公開してるのでポート番号なしでOK)
-        "http://192.168.35.242:80",       # 念のため明示的にも追加
+        "http://192.168.35.212",          # 本番用 (ポート80で公開してるのでポート番号なしでOK)
+        "http://192.168.35.212:80",       # 念のため明示的にも追加
     ],
     allow_credentials=True,
     allow_methods=["*"],

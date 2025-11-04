@@ -4,8 +4,8 @@ services:
   backend:
     container_name: paper-nest-backend
     build:
-      context: .
-      dockerfile: Docker/backend/Dockerfile
+      context: ..
+      dockerfile: .devcontainer/Docker/backend/Dockerfile
     working_dir: /workspace/backend
     ports:
       - "8000:8000"
@@ -17,8 +17,10 @@ services:
   frontend:
     container_name: paper-nest-frontend
     build:
-      context: .
-      dockerfile: Docker/frontend/Dockerfile
+      context: ..
+      dockerfile: .devcontainer/Docker/frontend/Dockerfile
+      args:
+        NODE_VER: 20
     ports:
       - "80:80"
     env_file:

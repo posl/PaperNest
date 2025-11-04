@@ -1,19 +1,20 @@
-# ===== Build Stage =====
-FROM node:20 AS build
+ARG NODE_VER=20
+FROM node:${NODE_VER} AS build
+
 WORKDIR /workspace/frontend
 
-COPY Docker/frontend/package*.json ./
-RUN npm ci
+# package.json だけ先にコピーして依存関係インストール
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --legacy-peer-deps
 
-COPY Docker/frontend ./
+# ソースコード全コピー（index.html 含む）
+COPY frontend/. ./
+
+# Vite ビルド
 RUN npm run build
 
-# ===== Production Stage =====
-FROM nginx:alpine
+# 本番用 nginx
+FROM nginx:stable-alpine
 COPY --from=build /workspace/frontend/dist /usr/share/nginx/html
-
-# Nginxデフォルト設定を上書き（必要なら）
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

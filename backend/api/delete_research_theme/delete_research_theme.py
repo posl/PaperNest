@@ -3,7 +3,7 @@ import time
 
 from fastapi import APIRouter, Depends, HTTPException
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from sqlalchemy.orm import Session
 
 from backend.config.config import EMBEDDINGS_MODEL, UPLOAD_DIR, VECTOR_STORE_DIR
